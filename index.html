@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>信用卡回饋助手</title>
     
-    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/visa.png">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/color/512/visa.png">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -14,14 +14,13 @@
 
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #34495e;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --bg-color: #f1f3f5; /* 稍微加深背景色 */
+            --primary: #6c5ce7;
+            --secondary: #a29bfe;
+            --success: #00b894;
+            --danger: #ff7675;
+            --bg-color: #f0f3f7;
             --card-bg: #ffffff;
             --text-main: #2d3436;
-            --text-muted: #636e72;
         }
 
         body {
@@ -33,89 +32,78 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        .container { max-width: 500px; margin: auto; padding-bottom: 50px; }
+        .container { max-width: 500px; margin: auto; padding-bottom: 60px; }
 
-        /* 頂部總覽 */
+        /* 儀表板 */
         .dashboard {
-            background: #ffffff;
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
             padding: 24px 20px;
-            border-radius: 16px;
+            border-radius: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.2);
             display: flex;
             justify-content: space-around;
             text-align: center;
+            color: white;
         }
-        .stat-label { font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; }
-        .stat-value { font-size: 1.5em; font-weight: bold; color: var(--primary); }
-        .stat-value.reward { color: #f39c12; }
+        .stat-label { font-size: 0.85em; opacity: 0.9; margin-bottom: 4px; }
+        .stat-value { font-size: 1.6em; font-weight: 800; }
+        .stat-value.reward { color: #ffe66d; }
 
         /* 分類卡片 */
         .category-group {
             background: var(--card-bg);
-            border-radius: 14px;
-            margin-bottom: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-radius: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             overflow: hidden;
+            border: 1px solid #e1e8ed;
         }
 
         .category-header {
-            padding: 14px 16px;
+            padding: 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #fff;
+            background: #f9faff;
             cursor: pointer;
-            border-bottom: 1px solid #f1f3f5;
         }
 
-        .category-info { flex: 1; }
-        .category-title { font-weight: bold; font-size: 1em; display: flex; align-items: center; }
-        .category-total { font-size: 0.75em; color: var(--text-muted); margin-top: 2px; }
+        .category-title { font-weight: bold; font-size: 1.1em; color: var(--primary); display: flex; align-items: center; }
+        .category-total { font-size: 0.8em; color: #636e72; margin-top: 4px; }
 
-        /* 摺疊效果 */
-        .card-list {
-            transition: max-height 0.3s ease-out;
-            max-height: 1000px; /* 足夠大的數值 */
-            overflow: hidden;
-            padding: 0 16px;
-        }
-        .card-list.collapsed {
-            max-height: 0;
-        }
+        /* 摺疊清單 */
+        .card-list { transition: max-height 0.3s ease-in-out; max-height: 2000px; overflow: hidden; padding: 0 16px; }
+        .card-list.collapsed { max-height: 0; }
 
-        /* 卡片細項 */
-        .card-item { padding: 15px 0; border-bottom: 1px solid #f8f9fa; position: relative; }
+        .card-item { padding: 18px 0; border-bottom: 1px solid #f1f3f5; }
         .card-item:last-child { border-bottom: none; }
 
-        .card-info-top { display: flex; justify-content: space-between; align-items: center; }
-        .card-name { font-weight: 600; color: var(--primary); }
+        .card-info-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .card-name { font-weight: 700; color: #4834d4; font-size: 1.05em; cursor: pointer; }
 
-        .progress-container { background: #eee; height: 10px; border-radius: 5px; margin: 12px 0; }
-        .progress-bar { height: 100%; background: var(--success); border-radius: 5px; transition: width 0.5s; }
-        .progress-bar.warning { background: var(--danger); }
+        /* 進度條 */
+        .progress-container { background: #dfe6e9; height: 12px; border-radius: 6px; margin: 12px 0; border: 1px solid #dcdde1; }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #55efc4, #00b894); border-radius: 6px; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .progress-bar.warning { background: linear-gradient(90deg, #ff7675, #d63031); }
         
-        .progress-details { display: flex; justify-content: space-between; font-size: 0.85em; color: var(--text-muted); }
-        .editable { color: #3498db; border-bottom: 1px dashed #3498db; }
+        .progress-details { display: flex; justify-content: space-between; font-size: 0.85em; font-weight: 500; color: #636e72; }
+        .editable { color: #0984e3; font-weight: bold; border-bottom: 2px solid #74b9ff; cursor: pointer; }
 
         /* 按鈕樣式 */
-        .btn-icon { background: none; border: none; padding: 6px; cursor: pointer; color: #b2bec3; font-size: 1.2em; line-height: 1; }
-        .btn-icon:active { color: var(--danger); }
-        
-        .btn-spend { background: var(--primary); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 0.85em; }
-        
-        .btn-add-cat { background: #fff; color: var(--primary); padding: 15px; width: 100%; border: 1px solid #ddd; border-radius: 12px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .btn-icon { background: none; border: none; padding: 8px; cursor: pointer; color: #b2bec3; font-size: 1.2em; }
+        .btn-spend { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2); }
+        .btn-add-cat { background: #ffffff; color: var(--primary); padding: 16px; width: 100%; border: 2px solid var(--primary); border-radius: 14px; font-weight: 800; margin-bottom: 20px; font-size: 1em; }
+        .btn-tool { background: #ffffff; border: 1.5px solid #d1d8e0; padding: 10px 14px; border-radius: 10px; font-size: 0.85em; color: var(--primary); margin: 5px; font-weight: 600; }
 
-        .btn-tool { background: #e9ecef; border: none; padding: 8px 12px; border-radius: 8px; font-size: 0.8em; color: var(--primary); margin: 0 5px; }
-
-        .chevron { font-size: 0.8em; margin-right: 8px; transition: transform 0.3s; }
+        .chevron { margin-right: 10px; transition: transform 0.3s; color: var(--secondary); }
         .collapsed-icon .chevron { transform: rotate(-90deg); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h3 style="text-align: center; color: var(--primary); margin-top: 10px;">💳 信用卡回饋助手</h3>
+    <h2 style="text-align: center; color: var(--primary); margin: 20px 0;">💳 信用卡回饋助手</h2>
 
     <div class="dashboard">
         <div class="stat-item">
@@ -123,33 +111,36 @@
             <div class="stat-value" id="globalTotalSpent">$0</div>
         </div>
         <div class="stat-item">
-            <div class="stat-label">預計回饋</div>
+            <div class="stat-label">預計總回饋</div>
             <div class="stat-value reward" id="globalTotalReward">$0</div>
         </div>
     </div>
 
-    <button class="btn-add-cat" onclick="addCategory()">＋ 新增通路分類</button>
+    <button class="btn-add-cat" onclick="addCategory()">＋ 新增消費通路分類</button>
 
     <div id="mainDisplay"></div>
 
-    <div style="margin-top: 30px; text-align: center;">
+    <div style="margin-top: 40px; text-align: center;">
         <button class="btn-tool" onclick="exportData()">💾 備份資料</button>
         <button class="btn-tool" onclick="importData()">🔄 還原資料</button>
     </div>
 </div>
 
 <script>
-    // 加入收起狀態的紀錄
-    let data = JSON.parse(localStorage.getItem('cardTrackerData_v3')) || [];
+    let data = JSON.parse(localStorage.getItem('cardTrackerData_final')) || [];
 
     function save() {
-        localStorage.setItem('cardTrackerData_v3', JSON.stringify(data));
+        localStorage.setItem('cardTrackerData_final', JSON.stringify(data));
         render();
     }
 
+    // 新增分類：不強制數字
     function addCategory() {
-        const name = prompt("通路名稱 (如：外送、網購):");
-        if (name) { data.push({ id: Date.now(), name, cards: [], isCollapsed: false }); save(); }
+        const name = prompt("輸入分類名稱 (例如：海外、外送):");
+        if (name) { 
+            data.push({ id: Date.now(), name: name, cards: [], isCollapsed: false }); 
+            save(); 
+        }
     }
 
     function toggleCollapse(catId) {
@@ -158,34 +149,62 @@
         save();
     }
 
+    // 新增卡片：名稱不強制，但上限與比率強制數字
     function addCardToCat(catId, event) {
-        event.stopPropagation(); // 阻止觸發摺疊
+        event.stopPropagation();
         const name = prompt("卡片名稱:");
-        const limit = parseFloat(prompt("回饋上限金額:"));
-        const rate = parseFloat(prompt("回饋率 (%):"));
-        if (!name || isNaN(limit) || isNaN(rate)) return;
-        data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
+        if (!name) return;
+
+        const limitInput = prompt("回饋上限金額 (元):", "300");
+        const rateInput = prompt("回饋率 (%):", "3");
+        
+        const limit = Number(limitInput);
+        const rate = Number(rateInput);
+        
+        if (limitInput === null || rateInput === null) return;
+        if (isNaN(limit) || isNaN(rate)) {
+            alert("錯誤：回饋上限與比率必須輸入數字");
+            return;
+        }
+        
+        data.find(c => c.id === catId).cards.push({ id: Date.now(), name: name, limit: limit, rate: rate, spent: 0 });
         save();
     }
 
+    // 紀錄消費：強制數字
     function addSpend(catId, cardId) {
-        const amount = parseFloat(prompt("紀錄消費金額:"));
-        if (isNaN(amount)) return;
+        const input = prompt("紀錄消費金額:");
+        if (input === null) return;
+        const amount = Number(input);
+        if (isNaN(amount)) {
+            alert("錯誤：消費金額必須輸入數字");
+            return;
+        }
         data.find(c => c.id === catId).cards.find(cd => cd.id === cardId).spent += amount;
         save();
     }
 
+    // 編輯欄位：名稱不強制數字，其他強制
     function editField(catId, cardId, field) {
         const card = data.find(c => c.id === catId).cards.find(cd => cd.id === cardId);
-        let newVal = prompt(`修改 ${field}:`, card[field]);
-        if (newVal !== null) {
-            card[field] = (field === 'name') ? newVal : parseFloat(newVal);
-            save();
+        let input = prompt(`修改 ${field}:`, card[field]);
+        if (input === null) return;
+
+        if (field === 'name') {
+            card[field] = input;
+        } else {
+            const val = Number(input);
+            if (isNaN(val)) {
+                alert("錯誤：此欄位必須輸入數字");
+                return;
+            }
+            card[field] = val;
         }
+        save();
     }
 
     function deleteCard(catId, cardId) {
-        if (confirm("刪除此卡片？")) {
+        if (confirm("刪除這張卡片紀錄？")) {
             const cat = data.find(c => c.id === catId);
             cat.cards = cat.cards.filter(cd => cd.id !== cardId);
             save();
@@ -194,7 +213,7 @@
 
     function deleteCategory(catId, event) {
         event.stopPropagation();
-        if (confirm("刪除整個分類？")) {
+        if (confirm("刪除整個分類與所有卡片？")) {
             data = data.filter(c => c.id !== catId);
             save();
         }
@@ -227,7 +246,7 @@
                             <span>上限: <span class="editable" onclick="editField(${cat.id}, ${card.id}, 'limit')">$${card.limit}</span> (${card.rate}%)</span>
                         </div>
                         <div style="text-align:right">
-                            <button class="btn-icon" onclick="deleteCard(${cat.id}, ${card.id})">✕</button>
+                            <button class="btn-icon" onclick="deleteCard(${cat.id}, ${card.id})">✕ 刪除</button>
                         </div>
                     </div>
                 `;
@@ -238,15 +257,15 @@
                     <div class="category-header" onclick="toggleCollapse(${cat.id})">
                         <div class="category-info">
                             <div class="category-title"><span class="chevron">▼</span>${cat.name}</div>
-                            <div class="category-total">本項累積: $${catTotal.toLocaleString()}</div>
+                            <div class="category-total">分類累計: $${catTotal.toLocaleString()}</div>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <button class="btn-tool" onclick="addCardToCat(${cat.id}, event)" style="background:none; border:1px solid #ccc; font-size:0.7em;">＋卡片</button>
-                            <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:8px;">✕</button>
+                            <button class="btn-tool" onclick="addCardToCat(${cat.id}, event)" style="font-size:0.75em; border-color:var(--primary);">＋卡片</button>
+                            <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:5px;">✕</button>
                         </div>
                     </div>
                     <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">
-                        ${cardHtml || '<div style="color:#999; text-align:center; padding:20px; font-size:0.8em;">點擊「＋卡片」開始</div>'}
+                        ${cardHtml || '<div style="color:#999; text-align:center; padding:30px; font-size:0.9em;">尚未新增卡片</div>'}
                     </div>
                 </div>
             `;
@@ -256,7 +275,6 @@
         document.getElementById('globalTotalReward').innerText = '$' + Math.floor(gReward).toLocaleString();
     }
 
-    // 備份功能
     function exportData() {
         const text = JSON.stringify(data);
         const el = document.createElement('textarea');
@@ -265,11 +283,11 @@
         el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
-        alert("資料已複製！請貼到記事本保存。");
+        alert("資料已複製！請貼到記事本備份。");
     }
 
     function importData() {
-        const json = prompt("請貼上備份文字：");
+        const json = prompt("請貼上備份資料：");
         if (json) {
             try { data = JSON.parse(json); save(); alert("還原成功！"); } 
             catch(e) { alert("格式錯誤！"); }
