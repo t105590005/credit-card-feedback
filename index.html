@@ -65,11 +65,11 @@
 <div id="customModal"><div class="modal-content" id="modalBox"></div></div>
 
 <script>
-    // 使用 v7 版本確保邏輯完全刷新
-    let data = JSON.parse(localStorage.getItem('cardTracker_v7')) || [];
+    // 使用 v8 版本確保邏輯完全刷新
+    let data = JSON.parse(localStorage.getItem('cardTracker_v8')) || [];
 
     function save() {
-        localStorage.setItem('cardTracker_v7', JSON.stringify(data));
+        localStorage.setItem('cardTracker_v8', JSON.stringify(data));
         render();
     }
 
@@ -103,7 +103,6 @@
     function doSyncSpend(cardName) {
         const amount = Number(document.getElementById('sAmount').value);
         if(!amount) return;
-        // 核心同步邏輯：所有同名的卡片 spent 一起增加
         data.forEach(cat => {
             cat.cards.forEach(card => {
                 if(card.name.trim() === cardName.trim()) card.spent += amount;
@@ -112,18 +111,25 @@
         save(); closeModal();
     }
 
+    // 修正點：確保傳入正確的 field 名稱
     function showEdit(cardName, field) {
         const sampleCard = findCardByName(cardName);
         const isNum = field !== 'name';
-        modalBox.innerHTML = `<h3>修改全域 ${field}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${sampleCard[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
+        const displayField = field === 'spent' ? '已刷金額' : (field === 'limit' ? '回饋上限' : '卡片名稱');
+        
+        modalBox.innerHTML = `<h3>修改全域 ${displayField}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${sampleCard[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
         modal.style.display = 'flex';
     }
     function doSyncEdit(oldName, field) {
         const val = document.getElementById('editVal').value;
         const finalVal = (field === 'name') ? val.trim() : Number(val);
+        
         data.forEach(cat => {
             cat.cards.forEach(card => {
-                if(card.name.trim() === oldName.trim()) card[field] = finalVal;
+                if(card.name.trim() === oldName.trim()) {
+                    card[field] = finalVal;
+                    // 如果改了名字，後續的比對需要用新名字，但在這個迴圈中我們先完成這批同步
+                }
             });
         });
         save(); closeModal();
@@ -131,7 +137,7 @@
 
     function findCardByName(name) {
         for(let cat of data) {
-            for(let card of cat.cards) { if(card.name === name) return card; }
+            for(let card of cat.cards) { if(card.name.trim() === name.trim()) return card; }
         }
         return null;
     }
@@ -139,7 +145,7 @@
     function render() {
         const container = document.getElementById('mainDisplay');
         container.innerHTML = '';
-        let globalSpentMap = {}; // 用於儀表板計算
+        let globalSpentMap = {}; 
 
         data.forEach(cat => {
             let catHtml = "";
@@ -158,14 +164,14 @@
                     <div class="progress-container"><div class="progress-bar ${card.spent >= maxSpend ? 'warning' : ''}" style="width: ${percent}%"></div></div>
                     <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#636e72;">
                         <span>加總已刷: <span class="editable" onclick="showEdit('${name}', 'spent')">$${card.spent.toLocaleString()}</span></span>
-                        <span>上限: $${card.limit} (${card.rate}%)</span>
+                        <span>上限: <span class="editable" onclick="showEdit('${name}', 'limit')">$${card.limit}</span> (${card.rate}%)</span>
                     </div>
                     <div style="text-align:right;"><button class="btn-icon" onclick="deleteCard(${cat.id}, ${card.id})">✕</button></div>
                 </div>`;
             });
             container.innerHTML += `<div class="category-group">
                 <div class="category-header" onclick="const c=data.find(x=>x.id===${cat.id}); c.isCollapsed=!c.isCollapsed; save();">
-                    <div><div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div></div>
+                    <div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div>
                     <button onclick="event.stopPropagation(); showAddCard(${cat.id})" style="font-size:0.75em; border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; font-weight:bold;">＋卡片</button>
                 </div>
                 <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無卡片</div>'}</div>
