@@ -65,11 +65,11 @@
 <div id="customModal"><div class="modal-content" id="modalBox"></div></div>
 
 <script>
-    // 使用 v8 版本確保邏輯完全刷新
-    let data = JSON.parse(localStorage.getItem('cardTracker_v8')) || [];
+    // 使用 v9 版本
+    let data = JSON.parse(localStorage.getItem('cardTracker_v9')) || [];
 
     function save() {
-        localStorage.setItem('cardTracker_v8', JSON.stringify(data));
+        localStorage.setItem('cardTracker_v9', JSON.stringify(data));
         render();
     }
 
@@ -111,13 +111,12 @@
         save(); closeModal();
     }
 
-    // 修正點：確保傳入正確的 field 名稱
     function showEdit(cardName, field) {
         const sampleCard = findCardByName(cardName);
         const isNum = field !== 'name';
-        const displayField = field === 'spent' ? '已刷金額' : (field === 'limit' ? '回饋上限' : '卡片名稱');
+        const fieldMap = { 'spent': '已刷金額', 'limit': '回饋上限', 'rate': '回饋百分比', 'name': '卡片名稱' };
         
-        modalBox.innerHTML = `<h3>修改全域 ${displayField}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${sampleCard[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
+        modalBox.innerHTML = `<h3>修改全域 ${fieldMap[field]}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${sampleCard[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
         modal.style.display = 'flex';
     }
     function doSyncEdit(oldName, field) {
@@ -126,10 +125,7 @@
         
         data.forEach(cat => {
             cat.cards.forEach(card => {
-                if(card.name.trim() === oldName.trim()) {
-                    card[field] = finalVal;
-                    // 如果改了名字，後續的比對需要用新名字，但在這個迴圈中我們先完成這批同步
-                }
+                if(card.name.trim() === oldName.trim()) card[field] = finalVal;
             });
         });
         save(); closeModal();
@@ -164,7 +160,7 @@
                     <div class="progress-container"><div class="progress-bar ${card.spent >= maxSpend ? 'warning' : ''}" style="width: ${percent}%"></div></div>
                     <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#636e72;">
                         <span>加總已刷: <span class="editable" onclick="showEdit('${name}', 'spent')">$${card.spent.toLocaleString()}</span></span>
-                        <span>上限: <span class="editable" onclick="showEdit('${name}', 'limit')">$${card.limit}</span> (${card.rate}%)</span>
+                        <span>上限: <span class="editable" onclick="showEdit('${name}', 'limit')">$${card.limit}</span> (<span class="editable" onclick="showEdit('${name}', 'rate')">${card.rate}</span>%)</span>
                     </div>
                     <div style="text-align:right;"><button class="btn-icon" onclick="deleteCard(${cat.id}, ${card.id})">✕</button></div>
                 </div>`;
