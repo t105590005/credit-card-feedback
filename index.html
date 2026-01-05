@@ -13,7 +13,7 @@
         :root {
             --primary: #6c5ce7; --secondary: #a29bfe; --success: #00b894;
             --danger: #ff7675; --bg-color: #f0f3f7; --card-bg: #ffffff;
-            --text-main: #2d3436;
+            --text-main: #2d3436; --note-bg: #fff9db; --note-text: #f08c00;
         }
         body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); padding: 16px; margin: 0; -webkit-tap-highlight-color: transparent; }
         .container { max-width: 500px; margin: auto; padding-bottom: 80px; }
@@ -32,22 +32,29 @@
         .card-list { transition: max-height 0.3s ease; max-height: 2000px; padding: 0 16px; }
         .card-list.collapsed { max-height: 0; overflow: hidden; }
         .card-item { padding: 18px 0; border-bottom: 1px solid #f1f3f5; }
-        .progress-container { background: #dfe6e9; height: 14px; border-radius: 7px; margin: 12px 0; border: 1px solid #dcdde1; }
+        .progress-container { background: #dfe6e9; height: 14px; border-radius: 7px; margin: 8px 0; border: 1px solid #dcdde1; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #55efc4, #00b894); border-radius: 7px; transition: width 0.6s; }
         .progress-bar.warning { background: linear-gradient(90deg, #ff7675, #d63031); }
         .editable { color: #0984e3; font-weight: bold; border-bottom: 2px solid #74b9ff; cursor: pointer; }
+        
+        /* 備註標籤樣式 */
+        .card-note-tag { 
+            display: inline-block; background: var(--note-bg); color: var(--note-text); 
+            font-size: 0.75em; padding: 2px 8px; border-radius: 6px; 
+            margin-top: 4px; border: 1px solid #ffe066; cursor: pointer;
+        }
+
         .btn-spend { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: bold; }
         .btn-add-cat { background: #ffffff; color: var(--primary); padding: 16px; width: 100%; border: 2px solid var(--primary); border-radius: 14px; font-weight: 800; margin-bottom: 20px; font-size: 1em; }
         .btn-icon { background: none; border: none; color: #b2bec3; font-size: 1.1em; cursor: pointer; padding: 5px; }
         
-        /* 底部工具欄 */
         .admin-tools { display: flex; gap: 8px; margin-top: 20px; }
         .btn-admin { flex: 1; padding: 10px; font-size: 0.8em; border-radius: 10px; border: 1px solid #ddd; background: #fff; color: #666; font-weight: bold; cursor: pointer; }
         .btn-danger { color: #d63031; border-color: #ff7675; }
 
         #customModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 24px; width: 85%; max-width: 350px; text-align: left; }
-        .modal-input { width: 100%; padding: 12px; border: 2px solid #f1f3f5; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; margin-top: 10px; }
+        .modal-input { width: 100%; padding: 12px; border: 2px solid #f1f3f5; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; margin-top: 10px; margin-bottom: 10px; }
         .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
         .modal-btns button { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; }
     </style>
@@ -71,9 +78,9 @@
     <div id="mainDisplay"></div>
 
     <div class="admin-tools">
-        <button class="btn-admin" onclick="exportData()">📤 備份資料</button>
-        <button class="btn-admin" onclick="document.getElementById('fileInput').click()">📥 匯入資料</button>
-        <button class="btn-admin btn-danger" onclick="resetAllSpent()">🧹 清除金額</button>
+        <button class="btn-admin" onclick="exportData()">📤 備份</button>
+        <button class="btn-admin" onclick="document.getElementById('fileInput').click()">📥 匯入</button>
+        <button class="btn-admin btn-danger" onclick="resetAllSpent()">🧹 金額歸零</button>
         <input type="file" id="fileInput" style="display:none" onchange="importData(event)" accept=".json">
     </div>
 </div>
@@ -82,13 +89,14 @@
 
 <script>
     let data = [];
-    const STORAGE_KEY = 'cardTracker_v11';
+    const STORAGE_KEY = 'cardTracker_v12'; // 升級版本以支援 note
 
     function loadData() {
         try {
             const saved = localStorage.getItem(STORAGE_KEY);
             data = saved ? JSON.parse(saved) : [];
-            if (!Array.isArray(data)) data = [];
+            // 防呆處理舊資料缺失 note 欄位
+            data.forEach(cat => cat.cards.forEach(card => { if(!card.note) card.note = ""; }));
         } catch (e) { data = []; }
     }
 
@@ -101,14 +109,11 @@
     const modalBox = document.getElementById('modalBox');
     function closeModal() { modal.style.display = 'none'; }
 
-    // --- 管理功能 ---
-
     function exportData() {
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `信用卡資料備份_${new Date().toLocaleDateString()}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `信用卡資料_${new Date().toLocaleDateString()}.json`;
         a.click();
     }
 
@@ -120,11 +125,7 @@
             try {
                 const imported = JSON.parse(e.target.result);
                 if (Array.isArray(imported)) {
-                    if (confirm("匯入將覆蓋現有資料，確定嗎？")) {
-                        data = imported;
-                        save();
-                        alert("匯入成功！");
-                    }
+                    if (confirm("匯入將覆蓋現有資料，確定嗎？")) { data = imported; save(); alert("匯入成功！"); }
                 }
             } catch (err) { alert("檔案格式錯誤"); }
         };
@@ -132,27 +133,25 @@
     }
 
     function resetAllSpent() {
-        if (confirm("確定要將所有「已刷金額」歸零嗎？\n(卡片設定與分類將會保留)")) {
-            data.forEach(cat => {
-                cat.cards.forEach(card => {
-                    card.spent = 0;
-                });
-            });
+        if (confirm("確定要將所有「已刷金額」歸零嗎？")) {
+            data.forEach(cat => cat.cards.forEach(card => card.spent = 0));
             save();
-            alert("已清除本月金額！");
         }
     }
 
-    // --- 原始邏輯 ---
-
     function showAddCat() {
-        modalBox.innerHTML = `<h3>新增分類</h3><input type="text" id="catName" class="modal-input"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="const n=document.getElementById('catName').value; if(n){data.push({id:Date.now(),name:n,cards:[],isCollapsed:false});save();closeModal();}">確定</button></div>`;
+        modalBox.innerHTML = `<h3>新增分類</h3><input type="text" id="catName" class="modal-input" placeholder="例如：外送、交通"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="const n=document.getElementById('catName').value; if(n){data.push({id:Date.now(),name:n,cards:[],isCollapsed:false});save();closeModal();}">確定</button></div>`;
         modal.style.display = 'flex';
         document.getElementById('catName').focus();
     }
 
     function showAddCard(catId) {
-        modalBox.innerHTML = `<h3>新增卡片</h3><label style="font-size:0.8em">名稱(同名將同步)</label><input type="text" id="cName" class="modal-input"><label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300"><label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
+        modalBox.innerHTML = `<h3>新增卡片</h3>
+        <label style="font-size:0.8em">名稱</label><input type="text" id="cName" class="modal-input">
+        <label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300">
+        <label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5">
+        <label style="font-size:0.8em">備註 (如：需登錄)</label><input type="text" id="cNote" class="modal-input" placeholder="可不填">
+        <div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
         modal.style.display = 'flex';
     }
 
@@ -160,14 +159,16 @@
         const name = document.getElementById('cName').value.trim();
         const limit = Number(document.getElementById('cLimit').value);
         const rate = Number(document.getElementById('cRate').value);
+        const note = document.getElementById('cNote').value.trim();
         if(!name) return;
         const cat = data.find(c => c.id === catId);
-        if(cat) { cat.cards.push({ id: Date.now(), name, limit, rate, spent: 0 }); save(); closeModal(); }
+        if(cat) { cat.cards.push({ id: Date.now(), name, limit, rate, spent: 0, note: note }); save(); closeModal(); }
     }
 
     function showAddSpend(cardName) {
         modalBox.innerHTML = `<h3>紀錄金額 (${cardName})</h3><input type="number" inputmode="decimal" id="sAmount" class="modal-input" placeholder="0"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncSpend('${cardName}')">確定</button></div>`;
         modal.style.display = 'flex';
+        setTimeout(()=>document.getElementById('sAmount').focus(), 100);
     }
 
     function doSyncSpend(cardName) {
@@ -181,14 +182,18 @@
 
     function showEdit(cardName, field) {
         const card = findCardByName(cardName);
-        const isNum = field !== 'name';
-        modalBox.innerHTML = `<h3>修改全域 ${field}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
+        const isNum = (field === 'spent' || field === 'limit' || field === 'rate');
+        const fieldNames = { name: '卡片名稱', spent: '已刷金額', limit: '回饋上限', rate: '回饋%', note: '備註' };
+        
+        modalBox.innerHTML = `<h3>修改全域 ${fieldNames[field]}</h3>
+        <input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field] || ''}">
+        <div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
         modal.style.display = 'flex';
     }
 
     function doSyncEdit(oldName, field) {
         const val = document.getElementById('editVal').value;
-        const finalVal = (field === 'name') ? val.trim() : Number(val);
+        const finalVal = (field === 'name' || field === 'note') ? val.trim() : Number(val);
         data.forEach(cat => cat.cards.forEach(card => {
             if(card.name.trim() === oldName.trim()) card[field] = finalVal;
         }));
@@ -206,7 +211,7 @@
         let stats = {};
         data.forEach(cat => cat.cards.forEach(card => {
             const n = card.name.trim();
-            if(!stats[n]) stats[n] = { spent: card.spent, limit: card.limit, rate: card.rate };
+            if(!stats[n]) stats[n] = { spent: card.spent, limit: card.limit, rate: card.rate, note: card.note || "" };
         }));
 
         data.forEach(cat => {
@@ -217,9 +222,16 @@
                 catTotal += card.spent;
                 const max = s.limit / (s.rate / 100);
                 const pct = Math.min((s.spent / max) * 100, 100);
+                
+                // 處理備註顯示
+                const noteHtml = s.note ? `<div class="card-note-tag" onclick="showEdit('${card.name}', 'note')">📝 ${s.note}</div>` : `<div class="card-note-tag" style="background:#f1f3f5; color:#adb5bd; border:none;" onclick="showEdit('${card.name}', 'note')">+ 備註</div>`;
+
                 catHtml += `<div class="card-item">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span style="font-weight:700; color:#4834d4; font-size:1.1em;" onclick="showEdit('${card.name}', 'name')">${card.name}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span style="font-weight:700; color:#4834d4; font-size:1.1em;" onclick="showEdit('${card.name}', 'name')">${card.name}</span>
+                            <br>${noteHtml}
+                        </div>
                         <button class="btn-spend" onclick="showAddSpend('${card.name}')">＋紀錄</button>
                     </div>
                     <div class="progress-container"><div class="progress-bar ${s.spent >= max ? 'warning' : ''}" style="width: ${pct}%"></div></div>
@@ -240,7 +252,7 @@
                     <button onclick="event.stopPropagation(); showAddCard(${cat.id})" style="font-size:0.75em; border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; font-weight:bold;">＋卡片</button>
                     <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:8px;">✕</button>
                 </div>
-                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無項目</div>'}</div>
+                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">點擊上方＋卡片開始</div>'}</div>
             </div>`;
         });
 
