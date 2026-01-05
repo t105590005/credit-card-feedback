@@ -12,182 +12,182 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="信用卡助手">
     <style>
-        :root {
-    --primary: #1a237e; /* 深靛藍 */
-    --accent: #3949ab;
-    --success: #66bb6a; /* 柔和綠 */
-    --warning: #ffa726; /* 橘色 */
-    --danger: #ef5350; /* 玫瑰紅 */
-    --reward-color: #ffca28; /* 金黃色 */
-    --bg-color: #f4f7f9;
-    --card-bg: #ffffff;
-    --text-main: #2c3e50;
-    --text-muted: #7f8c8d;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: var(--bg-color);
-    padding: 16px;
-    color: var(--text-main);
-    margin: 0;
-    line-height: 1.6;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.container {
-    max-width: 500px;
-    margin: auto;
-    padding-bottom: 80px;
-}
-
-/* 頂部總覽面板 */
-.dashboard {
-    background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
-    color: white;
-    padding: 24px 20px;
-    border-radius: 20px;
-    margin-bottom: 24px;
-    box-shadow: 0 10px 20px rgba(26, 35, 126, 0.2);
-    display: flex;
-    justify-content: space-around;
-    text-align: center;
-}
-
-.stat-item { flex: 1; }
-.stat-label { font-size: 0.8em; opacity: 0.85; margin-bottom: 6px; letter-spacing: 0.5px; }
-.stat-value { font-size: 1.5em; font-weight: 800; }
-.stat-value.reward { color: var(--reward-color); }
-
-/* 分類大項卡片 */
-.category-group {
-    background: var(--card-bg);
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    margin-bottom: 20px;
-    overflow: hidden;
-    border: 1px solid rgba(0,0,0,0.05);
-}
-
-.category-header {
-    background: #f8fafd;
-    padding: 14px 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #edf2f7;
-}
-
-.category-title {
-    font-weight: 700;
-    font-size: 1.05em;
-    color: var(--primary);
-}
-
-.category-total {
-    font-size: 0.8em;
-    color: var(--text-muted);
-    background: #eef2f7;
-    padding: 2px 8px;
-    border-radius: 10px;
-    margin-left: 8px;
-}
-
-/* 卡片細項 */
-.card-list { padding: 0 18px; }
-.card-item {
-    padding: 16px 0;
-    border-bottom: 1px solid #f1f4f8;
-}
-.card-item:last-child { border-bottom: none; }
-
-.card-info-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.card-name {
-    font-weight: 600;
-    font-size: 1em;
-    color: #34495e;
-}
-
-/* 進度條優化 */
-.progress-container {
-    background: #edf2f7;
-    height: 10px;
-    border-radius: 5px;
-    overflow: hidden;
-    margin: 10px 0;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #66bb6a, #81c784);
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.progress-bar.warning {
-    background: linear-gradient(90deg, #ef5350, #e57373);
-}
-
-.progress-details {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85em;
-    color: var(--text-muted);
-}
-
-/* 文字連結編輯感 */
-.editable {
-    color: var(--accent);
-    font-weight: 600;
-    border-bottom: 1px dashed var(--accent);
-    padding-bottom: 1px;
-}
-
-/* 按鈕優化 */
-.btn-add-cat {
-    background: var(--primary);
-    color: white;
-    padding: 16px;
-    width: 100%;
-    border: none;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 1em;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 6px rgba(26, 35, 126, 0.1);
-}
-
-.btn-spend {
-    background: var(--primary);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    font-size: 0.85em;
-    font-weight: 600;
-}
-
-.btn-add-card {
-    background: #ffffff;
-    border: 1.5px solid var(--accent);
-    color: var(--accent);
-    padding: 4px 10px;
-    border-radius: 6px;
-    font-size: 0.75em;
-    font-weight: 700;
-}
-
-.btn-del {
-    color: #bdc3c7;
-    font-size: 0.75em;
-    margin-top: 8px;
-    display: inline-block;
-}
+            :root {
+        --primary: #546e7a; /* 輕工業灰藍 */
+        --accent: #78909c;
+        --success: #81c784; /* 淺草綠 */
+        --warning: #ffb74d; /* 淺橘 */
+        --danger: #ef9a9a; /* 淺粉紅 */
+        --reward-color: #fdd835; /* 柔和金 */
+        --bg-color: #fafbfc;
+        --card-bg: #ffffff;
+        --text-main: #455a64;
+        --text-muted: #90a4ae;
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: var(--bg-color);
+        padding: 16px;
+        color: var(--text-main);
+        margin: 0;
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    .container {
+        max-width: 500px;
+        margin: auto;
+        padding-bottom: 80px;
+    }
+    
+    /* 頂部總覽面板 - 色調調淡 */
+    .dashboard {
+        background: #ffffff;
+        color: var(--primary);
+        padding: 24px 20px;
+        border-radius: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+        border: 1px solid #f0f3f5;
+    }
+    
+    .stat-item { flex: 1; }
+    .stat-label { font-size: 0.8em; color: var(--text-muted); margin-bottom: 4px; }
+    .stat-value { font-size: 1.4em; font-weight: 700; color: var(--primary); }
+    .stat-value.reward { color: #f9a825; }
+    
+    /* 分類卡片 - 移除重陰影 */
+    .category-group {
+        background: var(--card-bg);
+        border-radius: 16px;
+        margin-bottom: 16px;
+        border: 1px solid #edf2f4;
+        overflow: hidden;
+    }
+    
+    .category-header {
+        background: #fcfdfe;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f1f4f6;
+    }
+    
+    .category-title {
+        font-weight: 600;
+        font-size: 0.95em;
+        color: var(--primary);
+    }
+    
+    .category-total {
+        font-size: 0.75em;
+        color: var(--text-muted);
+        background: #f5f7f9;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 6px;
+    }
+    
+    /* 內容細項 */
+    .card-list { padding: 0 16px; }
+    .card-item {
+        padding: 14px 0;
+        border-bottom: 1px solid #f8fafb;
+        position: relative;
+    }
+    .card-item:last-child { border-bottom: none; }
+    
+    .card-info-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .card-name {
+        font-weight: 600;
+        font-size: 0.95em;
+        color: #546e7a;
+    }
+    
+    /* 進度條 - 使用更淡的色彩 */
+    .progress-container {
+        background: #f1f3f5;
+        height: 8px;
+        border-radius: 4px;
+        margin: 10px 0;
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: var(--success);
+        border-radius: 4px;
+        transition: width 0.6s ease;
+    }
+    
+    .progress-bar.warning { background: var(--danger); }
+    
+    .progress-details {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8em;
+        color: var(--text-muted);
+    }
+    
+    /* Icon 按鈕樣式 */
+    .btn-icon {
+        background: none;
+        border: none;
+        padding: 4px 8px;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 1.1em;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s;
+    }
+    
+    .btn-icon:hover { color: var(--danger); }
+    
+    /* 動作按鈕優化 */
+    .btn-add-cat {
+        background: #f1f3f5;
+        color: var(--primary);
+        padding: 14px;
+        width: 100%;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .btn-spend {
+        background: #f5f7f9;
+        color: var(--primary);
+        border: 1px solid #e2e8f0;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+    
+    .btn-add-card {
+        background: none;
+        border: 1px solid #cfd8dc;
+        color: var(--accent);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75em;
+    }
+    
+    .editable {
+        color: var(--accent);
+        border-bottom: 1px dashed #cfd8dc;
+    }
     </style>
 </head>
 <body>
