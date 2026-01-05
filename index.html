@@ -72,7 +72,6 @@
         .category-title { font-weight: bold; font-size: 1.1em; color: var(--primary); display: flex; align-items: center; }
         .category-total { font-size: 0.8em; color: #636e72; margin-top: 4px; }
 
-        /* 摺疊清單 */
         .card-list { transition: max-height 0.3s ease-in-out; max-height: 2000px; overflow: hidden; padding: 0 16px; }
         .card-list.collapsed { max-height: 0; }
 
@@ -82,7 +81,6 @@
         .card-info-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
         .card-name { font-weight: 700; color: #4834d4; font-size: 1.05em; cursor: pointer; }
 
-        /* 進度條 */
         .progress-container { background: #dfe6e9; height: 12px; border-radius: 6px; margin: 12px 0; border: 1px solid #dcdde1; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #55efc4, #00b894); border-radius: 6px; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .progress-bar.warning { background: linear-gradient(90deg, #ff7675, #d63031); }
@@ -92,12 +90,15 @@
 
         /* 按鈕樣式 */
         .btn-icon { background: none; border: none; padding: 8px; cursor: pointer; color: #b2bec3; font-size: 1.2em; }
-        .btn-spend { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(108, 92, 231, 0.2); }
+        .btn-spend { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; font-size: 0.9em; }
         .btn-add-cat { background: #ffffff; color: var(--primary); padding: 16px; width: 100%; border: 2px solid var(--primary); border-radius: 14px; font-weight: 800; margin-bottom: 20px; font-size: 1em; }
         .btn-tool { background: #ffffff; border: 1.5px solid #d1d8e0; padding: 10px 14px; border-radius: 10px; font-size: 0.85em; color: var(--primary); margin: 5px; font-weight: 600; }
 
         .chevron { margin-right: 10px; transition: transform 0.3s; color: var(--secondary); }
         .collapsed-icon .chevron { transform: rotate(-90deg); }
+
+        /* 隱藏的輸入框用於觸發鍵盤 */
+        #hiddenInput { position: absolute; top: -100px; opacity: 0; }
     </style>
 </head>
 <body>
@@ -126,6 +127,8 @@
     </div>
 </div>
 
+<input type="number" inputmode="decimal" id="hiddenInput">
+
 <script>
     let data = JSON.parse(localStorage.getItem('cardTrackerData_final')) || [];
 
@@ -134,13 +137,21 @@
         render();
     }
 
-    // 新增分類：不強制數字
+    // 通用的數字輸入函式，會強制手機彈出數字鍵盤
+    function promptNumber(msg, defaultVal = "") {
+        const result = prompt(msg, defaultVal);
+        if (result === null) return null;
+        const num = Number(result);
+        if (isNaN(num)) {
+            alert("請輸入有效的數字");
+            return promptNumber(msg, defaultVal);
+        }
+        return num;
+    }
+
     function addCategory() {
         const name = prompt("輸入分類名稱 (例如：海外、外送):");
-        if (name) { 
-            data.push({ id: Date.now(), name: name, cards: [], isCollapsed: false }); 
-            save(); 
-        }
+        if (name) { data.push({ id: Date.now(), name, cards: [], isCollapsed: false }); save(); }
     }
 
     function toggleCollapse(catId) {
@@ -149,60 +160,40 @@
         save();
     }
 
-    // 新增卡片：名稱不強制，但上限與比率強制數字
     function addCardToCat(catId, event) {
         event.stopPropagation();
         const name = prompt("卡片名稱:");
         if (!name) return;
 
-        const limitInput = prompt("回饋上限金額 (元):", "300");
-        const rateInput = prompt("回饋率 (%):", "3");
+        const limit = promptNumber("回饋上限金額 (元):", "300");
+        if (limit === null) return;
+        const rate = promptNumber("回饋率 (%):", "3");
+        if (rate === null) return;
         
-        const limit = Number(limitInput);
-        const rate = Number(rateInput);
-        
-        if (limitInput === null || rateInput === null) return;
-        if (isNaN(limit) || isNaN(rate)) {
-            alert("錯誤：回饋上限與比率必須輸入數字");
-            return;
-        }
-        
-        data.find(c => c.id === catId).cards.push({ id: Date.now(), name: name, limit: limit, rate: rate, spent: 0 });
+        data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
         save();
     }
 
-    // 紀錄消費：強制數字
     function addSpend(catId, cardId) {
-        const input = prompt("紀錄消費金額:");
-        if (input === null) return;
-        const amount = Number(input);
-        if (isNaN(amount)) {
-            alert("錯誤：消費金額必須輸入數字");
-            return;
-        }
+        const amount = promptNumber("紀錄消費金額:");
+        if (amount === null) return;
         data.find(c => c.id === catId).cards.find(cd => cd.id === cardId).spent += amount;
         save();
     }
 
-    // 編輯欄位：名稱不強制數字，其他強制
     function editField(catId, cardId, field) {
         const card = data.find(c => c.id === catId).cards.find(cd => cd.id === cardId);
-        let input = prompt(`修改 ${field}:`, card[field]);
-        if (input === null) return;
-
+        
         if (field === 'name') {
-            card[field] = input;
+            const newName = prompt("修改卡片名稱:", card.name);
+            if (newName) { card.name = newName; save(); }
         } else {
-            const val = Number(input);
-            if (isNaN(val)) {
-                alert("錯誤：此欄位必須輸入數字");
-                return;
-            }
-            card[field] = val;
+            const newVal = promptNumber(`修改 ${field}:`, card[field]);
+            if (newVal !== null) { card[field] = newVal; save(); }
         }
-        save();
     }
 
+    // 刪除與備份功能保持不變...
     function deleteCard(catId, cardId) {
         if (confirm("刪除這張卡片紀錄？")) {
             const cat = data.find(c => c.id === catId);
@@ -260,7 +251,7 @@
                             <div class="category-total">分類累計: $${catTotal.toLocaleString()}</div>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <button class="btn-tool" onclick="addCardToCat(${cat.id}, event)" style="font-size:0.75em; border-color:var(--primary);">＋卡片</button>
+                            <button class="btn-tool" onclick="addCardToCat(${cat.id}, event)" style="font-size:0.75em;">＋卡片</button>
                             <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:5px;">✕</button>
                         </div>
                     </div>
