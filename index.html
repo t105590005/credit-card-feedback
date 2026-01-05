@@ -6,7 +6,6 @@
     <title>信用卡回饋助手</title>
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="apple-touch-icon" href="icon.png">
-    
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
@@ -27,7 +26,9 @@
         .stat-value.reward { color: #ffe66d; }
         .category-group { background: var(--card-bg); border-radius: 18px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e1e8ed; }
         .category-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; background: #f9faff; cursor: pointer; }
-        .category-title { font-weight: bold; color: var(--primary); font-size: 1.1em; }
+        .category-title-wrap { flex: 1; }
+        .category-title { font-weight: bold; color: var(--primary); font-size: 1.1em; display: flex; align-items: center; }
+        .category-subtitle { font-size: 0.75em; color: #888; margin-top: 2px; font-weight: normal; }
         .card-list { transition: max-height 0.3s ease; max-height: 2000px; padding: 0 16px; }
         .card-list.collapsed { max-height: 0; overflow: hidden; }
         .card-item { padding: 18px 0; border-bottom: 1px solid #f1f3f5; }
@@ -51,11 +52,11 @@
     <h2 style="text-align: center; color: var(--primary); margin: 20px 0;">💳 信用卡回饋助手</h2>
     <div class="dashboard">
         <div class="stat-item">
-            <div style="font-size:0.85em; opacity:0.9;">本月加總消費</div>
+            <div style="font-size:0.85em; opacity:0.9;">本月總刷卡額</div>
             <div class="stat-value" id="globalTotalSpent">$0</div>
         </div>
         <div class="stat-item">
-            <div style="font-size:0.85em; opacity:0.9;">預計合併回饋</div>
+            <div style="font-size:0.85em; opacity:0.9;">預計總回饋</div>
             <div class="stat-value reward" id="globalTotalReward">$0</div>
         </div>
     </div>
@@ -66,15 +67,12 @@
 <div id="customModal"><div class="modal-content" id="modalBox"></div></div>
 
 <script>
-    // 使用 v11 版本以解決資料衝突
     let data = [];
     try {
         const saved = localStorage.getItem('cardTracker_v11');
         data = saved ? JSON.parse(saved) : [];
         if (!Array.isArray(data)) data = [];
-    } catch (e) {
-        data = [];
-    }
+    } catch (e) { data = []; }
 
     function save() {
         localStorage.setItem('cardTracker_v11', JSON.stringify(data));
@@ -88,10 +86,11 @@
     function showAddCat() {
         modalBox.innerHTML = `<h3>新增分類</h3><input type="text" id="catName" class="modal-input"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="const n=document.getElementById('catName').value; if(n){data.push({id:Date.now(),name:n,cards:[],isCollapsed:false});save();closeModal();}">確定</button></div>`;
         modal.style.display = 'flex';
+        document.getElementById('catName').focus();
     }
 
     function showAddCard(catId) {
-        modalBox.innerHTML = `<h3>新增卡片</h3><label style="font-size:0.8em">名稱(同名將同步)</label><input type="text" id="cName" class="modal-input"><label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300"><label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
+        modalBox.innerHTML = `<h3>新增卡片</h3><label style="font-size:0.8em">名稱(同名將同步進度)</label><input type="text" id="cName" class="modal-input"><label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300"><label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
         modal.style.display = 'flex';
     }
 
@@ -101,15 +100,13 @@
         const rate = Number(document.getElementById('cRate').value);
         if(!name) return alert("請輸入名稱");
         const cat = data.find(c => c.id === catId);
-        if(cat) {
-            cat.cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
-            save(); closeModal();
-        }
+        if(cat) { cat.cards.push({ id: Date.now(), name, limit, rate, spent: 0 }); save(); closeModal(); }
     }
 
     function showAddSpend(cardName) {
-        modalBox.innerHTML = `<h3>紀錄金額 (${cardName})</h3><input type="number" inputmode="decimal" id="sAmount" class="modal-input" placeholder="輸入金額"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncSpend('${cardName}')">確定</button></div>`;
+        modalBox.innerHTML = `<h3>紀錄金額 (${cardName})</h3><input type="number" inputmode="decimal" id="sAmount" class="modal-input" placeholder="輸入消費金額"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncSpend('${cardName}')">確定</button></div>`;
         modal.style.display = 'flex';
+        setTimeout(()=>document.getElementById('sAmount').focus(), 100);
     }
 
     function doSyncSpend(cardName) {
@@ -124,7 +121,8 @@
     function showEdit(cardName, field) {
         const card = findCardByName(cardName);
         const isNum = field !== 'name';
-        modalBox.innerHTML = `<h3>修改全域 ${field}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
+        const fieldMap = { 'spent': '已刷金額', 'limit': '回饋上限', 'rate': '回饋百分比', 'name': '卡片名稱' };
+        modalBox.innerHTML = `<h3>修改全域 ${fieldMap[field]}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
         modal.style.display = 'flex';
     }
 
@@ -153,8 +151,11 @@
 
         data.forEach(cat => {
             let catHtml = "";
+            let catTotalSpent = 0; // 分類小計
+
             cat.cards.forEach(card => {
                 const s = stats[card.name.trim()];
+                catTotalSpent += card.spent; // 這邊計算該分類的實際加總
                 const max = s.limit / (s.rate / 100);
                 const pct = Math.min((s.spent / max) * 100, 100);
                 catHtml += `<div class="card-item">
@@ -170,12 +171,17 @@
                     <div style="text-align:right;"><button class="btn-icon" onclick="deleteCard(${cat.id}, ${card.id})">✕</button></div>
                 </div>`;
             });
+
             container.innerHTML += `<div class="category-group">
                 <div class="category-header" onclick="const c=data.find(x=>x.id===${cat.id}); c.isCollapsed=!c.isCollapsed; save();">
-                    <div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div>
+                    <div class="category-title-wrap">
+                        <div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div>
+                        <div class="category-subtitle">本分類累計消費: $${catTotalSpent.toLocaleString()}</div>
+                    </div>
                     <button onclick="event.stopPropagation(); showAddCard(${cat.id})" style="font-size:0.75em; border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; font-weight:bold;">＋卡片</button>
+                    <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:8px;">✕</button>
                 </div>
-                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無卡片</div>'}</div>
+                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無卡片項目</div>'}</div>
             </div>`;
         });
 
@@ -189,9 +195,17 @@
     }
 
     function deleteCard(catId, cardId) {
-        if(confirm("刪除此項目？")) {
+        if(confirm("刪除此卡片？")) {
             const cat = data.find(c => c.id === catId);
             cat.cards = cat.cards.filter(cd => cd.id !== cardId);
+            save();
+        }
+    }
+
+    function deleteCategory(catId, event) {
+        event.stopPropagation();
+        if(confirm("刪除整個分類？")) {
+            data = data.filter(c => c.id !== catId);
             save();
         }
     }
