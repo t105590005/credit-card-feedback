@@ -16,7 +16,7 @@
             --text-main: #2d3436;
         }
         body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); padding: 16px; margin: 0; -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 500px; margin: auto; padding-bottom: 60px; }
+        .container { max-width: 500px; margin: auto; padding-bottom: 80px; }
         .dashboard {
             background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
             padding: 24px 20px; border-radius: 20px; margin-bottom: 20px;
@@ -39,6 +39,12 @@
         .btn-spend { background: var(--primary); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: bold; }
         .btn-add-cat { background: #ffffff; color: var(--primary); padding: 16px; width: 100%; border: 2px solid var(--primary); border-radius: 14px; font-weight: 800; margin-bottom: 20px; font-size: 1em; }
         .btn-icon { background: none; border: none; color: #b2bec3; font-size: 1.1em; cursor: pointer; padding: 5px; }
+        
+        /* 底部工具欄 */
+        .admin-tools { display: flex; gap: 8px; margin-top: 20px; }
+        .btn-admin { flex: 1; padding: 10px; font-size: 0.8em; border-radius: 10px; border: 1px solid #ddd; background: #fff; color: #666; font-weight: bold; cursor: pointer; }
+        .btn-danger { color: #d63031; border-color: #ff7675; }
+
         #customModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 24px; width: 85%; max-width: 350px; text-align: left; }
         .modal-input { width: 100%; padding: 12px; border: 2px solid #f1f3f5; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; margin-top: 10px; }
@@ -61,27 +67,83 @@
         </div>
     </div>
     <button class="btn-add-cat" onclick="showAddCat()">＋ 新增通路分類</button>
+    
     <div id="mainDisplay"></div>
+
+    <div class="admin-tools">
+        <button class="btn-admin" onclick="exportData()">📤 備份資料</button>
+        <button class="btn-admin" onclick="document.getElementById('fileInput').click()">📥 匯入資料</button>
+        <button class="btn-admin btn-danger" onclick="resetAllSpent()">🧹 清除金額</button>
+        <input type="file" id="fileInput" style="display:none" onchange="importData(event)" accept=".json">
+    </div>
 </div>
 
 <div id="customModal"><div class="modal-content" id="modalBox"></div></div>
 
 <script>
     let data = [];
-    try {
-        const saved = localStorage.getItem('cardTracker_v11');
-        data = saved ? JSON.parse(saved) : [];
-        if (!Array.isArray(data)) data = [];
-    } catch (e) { data = []; }
+    const STORAGE_KEY = 'cardTracker_v11';
+
+    function loadData() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            data = saved ? JSON.parse(saved) : [];
+            if (!Array.isArray(data)) data = [];
+        } catch (e) { data = []; }
+    }
 
     function save() {
-        localStorage.setItem('cardTracker_v11', JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         render();
     }
 
     const modal = document.getElementById('customModal');
     const modalBox = document.getElementById('modalBox');
     function closeModal() { modal.style.display = 'none'; }
+
+    // --- 管理功能 ---
+
+    function exportData() {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `信用卡資料備份_${new Date().toLocaleDateString()}.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (Array.isArray(imported)) {
+                    if (confirm("匯入將覆蓋現有資料，確定嗎？")) {
+                        data = imported;
+                        save();
+                        alert("匯入成功！");
+                    }
+                }
+            } catch (err) { alert("檔案格式錯誤"); }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetAllSpent() {
+        if (confirm("確定要將所有「已刷金額」歸零嗎？\n(卡片設定與分類將會保留)")) {
+            data.forEach(cat => {
+                cat.cards.forEach(card => {
+                    card.spent = 0;
+                });
+            });
+            save();
+            alert("已清除本月金額！");
+        }
+    }
+
+    // --- 原始邏輯 ---
 
     function showAddCat() {
         modalBox.innerHTML = `<h3>新增分類</h3><input type="text" id="catName" class="modal-input"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="const n=document.getElementById('catName').value; if(n){data.push({id:Date.now(),name:n,cards:[],isCollapsed:false});save();closeModal();}">確定</button></div>`;
@@ -90,7 +152,7 @@
     }
 
     function showAddCard(catId) {
-        modalBox.innerHTML = `<h3>新增卡片</h3><label style="font-size:0.8em">名稱(同名將同步進度)</label><input type="text" id="cName" class="modal-input"><label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300"><label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
+        modalBox.innerHTML = `<h3>新增卡片</h3><label style="font-size:0.8em">名稱(同名將同步)</label><input type="text" id="cName" class="modal-input"><label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300"><label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
         modal.style.display = 'flex';
     }
 
@@ -98,15 +160,14 @@
         const name = document.getElementById('cName').value.trim();
         const limit = Number(document.getElementById('cLimit').value);
         const rate = Number(document.getElementById('cRate').value);
-        if(!name) return alert("請輸入名稱");
+        if(!name) return;
         const cat = data.find(c => c.id === catId);
         if(cat) { cat.cards.push({ id: Date.now(), name, limit, rate, spent: 0 }); save(); closeModal(); }
     }
 
     function showAddSpend(cardName) {
-        modalBox.innerHTML = `<h3>紀錄金額 (${cardName})</h3><input type="number" inputmode="decimal" id="sAmount" class="modal-input" placeholder="輸入消費金額"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncSpend('${cardName}')">確定</button></div>`;
+        modalBox.innerHTML = `<h3>紀錄金額 (${cardName})</h3><input type="number" inputmode="decimal" id="sAmount" class="modal-input" placeholder="0"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncSpend('${cardName}')">確定</button></div>`;
         modal.style.display = 'flex';
-        setTimeout(()=>document.getElementById('sAmount').focus(), 100);
     }
 
     function doSyncSpend(cardName) {
@@ -121,8 +182,7 @@
     function showEdit(cardName, field) {
         const card = findCardByName(cardName);
         const isNum = field !== 'name';
-        const fieldMap = { 'spent': '已刷金額', 'limit': '回饋上限', 'rate': '回饋百分比', 'name': '卡片名稱' };
-        modalBox.innerHTML = `<h3>修改全域 ${fieldMap[field]}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
+        modalBox.innerHTML = `<h3>修改全域 ${field}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field]}"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doSyncEdit('${cardName}', '${field}')">確定</button></div>`;
         modal.style.display = 'flex';
     }
 
@@ -151,11 +211,10 @@
 
         data.forEach(cat => {
             let catHtml = "";
-            let catTotalSpent = 0; // 分類小計
-
+            let catTotal = 0;
             cat.cards.forEach(card => {
                 const s = stats[card.name.trim()];
-                catTotalSpent += card.spent; // 這邊計算該分類的實際加總
+                catTotal += card.spent;
                 const max = s.limit / (s.rate / 100);
                 const pct = Math.min((s.spent / max) * 100, 100);
                 catHtml += `<div class="card-item">
@@ -176,12 +235,12 @@
                 <div class="category-header" onclick="const c=data.find(x=>x.id===${cat.id}); c.isCollapsed=!c.isCollapsed; save();">
                     <div class="category-title-wrap">
                         <div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div>
-                        <div class="category-subtitle">本分類累計消費: $${catTotalSpent.toLocaleString()}</div>
+                        <div class="category-subtitle">本分類累計: $${catTotal.toLocaleString()}</div>
                     </div>
                     <button onclick="event.stopPropagation(); showAddCard(${cat.id})" style="font-size:0.75em; border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; font-weight:bold;">＋卡片</button>
                     <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:8px;">✕</button>
                 </div>
-                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無卡片項目</div>'}</div>
+                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無項目</div>'}</div>
             </div>`;
         });
 
@@ -210,6 +269,7 @@
         }
     }
 
+    loadData();
     render();
 </script>
 </body>
