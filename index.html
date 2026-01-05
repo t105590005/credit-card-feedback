@@ -66,7 +66,14 @@
 
 <script>
     // 使用 v10 版本
-    let data = JSON.parse(localStorage.getItem('cardTracker_v10')) || [];
+    let data = [];
+    try {
+        const savedData = localStorage.getItem('cardTracker_v10');
+        data = savedData ? JSON.parse(savedData) : [];
+        if (!Array.isArray(data)) data = []; 
+    } catch (e) {
+        data = [];
+    }
 
     function save() {
         localStorage.setItem('cardTracker_v10', JSON.stringify(data));
@@ -86,13 +93,25 @@
         modalBox.innerHTML = `<h3>新增卡片</h3><label style="font-size:0.8em">名稱(同名將同步)</label><input type="text" id="cName" class="modal-input"><label style="font-size:0.8em">上限</label><input type="number" inputmode="decimal" id="cLimit" class="modal-input" value="300"><label style="font-size:0.8em">回饋%</label><input type="number" inputmode="decimal" id="cRate" class="modal-input" value="5"><div class="modal-btns"><button onclick="closeModal()">取消</button><button style="background:var(--primary);color:#fff" onclick="doAddCard(${catId})">確定</button></div>`;
         modal.style.display = 'flex';
     }
+
     function doAddCard(catId) {
-        const name = document.getElementById('cName').value.trim();
-        const limit = Number(document.getElementById('cLimit').value);
-        const rate = Number(document.getElementById('cRate').value);
-        if(!name) return;
-        data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
-        save(); closeModal();
+        const nameInput = document.getElementById('cName');
+        const limitInput = document.getElementById('cLimit');
+        const rateInput = document.getElementById('cRate');
+    
+        const name = nameInput.value.trim();
+        const limit = Number(limitInput.value);
+        const rate = Number(rateInput.value);
+    
+        if (!name) return alert("請輸入卡片名稱");
+        
+        const category = data.find(c => c.id === catId);
+        if (category) {
+            // 初始化 history 陣列避免後續錯誤
+            category.cards.push({ id: Date.now(), name, limit, rate, spent: 0, history: [] });
+            save(); 
+            closeModal();
+        }
     }
 
     function showAddSpend(cardName) {
@@ -140,6 +159,13 @@
     function render() {
         const container = document.getElementById('mainDisplay');
         container.innerHTML = '';
+
+        // 防呆：確保每張卡片都有 spent 屬性
+        data.forEach(cat => {
+            cat.cards.forEach(card => {
+                if (card.spent === undefined) card.spent = 0;
+            });
+        });
         
         // 第一步：先掃描所有卡片，建立名稱與數據的對照表
         let globalStats = {};
