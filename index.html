@@ -50,55 +50,49 @@
         .stat-value { font-size: 1.6em; font-weight: 800; }
         .stat-value.reward { color: #ffe66d; }
 
-        /* 分類卡片 */
-        .category-group {
-            background: var(--card-bg);
-            border-radius: 18px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            overflow: hidden;
-            border: 1px solid #e1e8ed;
-        }
-
-        .category-header {
-            padding: 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f9faff;
-            cursor: pointer;
-        }
-
+        /* 通路與卡片清單樣式 */
+        .category-group { background: var(--card-bg); border-radius: 18px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e1e8ed; }
+        .category-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; background: #f9faff; cursor: pointer; }
         .category-title { font-weight: bold; font-size: 1.1em; color: var(--primary); display: flex; align-items: center; }
         .category-total { font-size: 0.8em; color: #636e72; margin-top: 4px; }
-
         .card-list { transition: max-height 0.3s ease-in-out; max-height: 2000px; overflow: hidden; padding: 0 16px; }
         .card-list.collapsed { max-height: 0; }
-
         .card-item { padding: 18px 0; border-bottom: 1px solid #f1f3f5; }
         .card-item:last-child { border-bottom: none; }
-
         .card-info-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
         .card-name { font-weight: 700; color: #4834d4; font-size: 1.05em; cursor: pointer; }
-
         .progress-container { background: #dfe6e9; height: 12px; border-radius: 6px; margin: 12px 0; border: 1px solid #dcdde1; }
         .progress-bar { height: 100%; background: linear-gradient(90deg, #55efc4, #00b894); border-radius: 6px; transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         .progress-bar.warning { background: linear-gradient(90deg, #ff7675, #d63031); }
-        
         .progress-details { display: flex; justify-content: space-between; font-size: 0.85em; font-weight: 500; color: #636e72; }
         .editable { color: #0984e3; font-weight: bold; border-bottom: 2px solid #74b9ff; cursor: pointer; }
 
-        /* 按鈕樣式 */
+        /* 按鈕與小工具 */
         .btn-icon { background: none; border: none; padding: 8px; cursor: pointer; color: #b2bec3; font-size: 1.2em; }
         .btn-spend { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; font-size: 0.9em; }
         .btn-add-cat { background: #ffffff; color: var(--primary); padding: 16px; width: 100%; border: 2px solid var(--primary); border-radius: 14px; font-weight: 800; margin-bottom: 20px; font-size: 1em; }
         .btn-tool { background: #ffffff; border: 1.5px solid #d1d8e0; padding: 10px 14px; border-radius: 10px; font-size: 0.85em; color: var(--primary); margin: 5px; font-weight: 600; }
-
         .chevron { margin-right: 10px; transition: transform 0.3s; color: var(--secondary); }
         .collapsed-icon .chevron { transform: rotate(-90deg); }
 
-        /* 隱藏的輸入框用於觸發鍵盤 */
-        #hiddenInput { position: absolute; top: -100px; opacity: 0; }
+        /* 自定義彈窗 (Modal) */
+        #customModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center;
+        }
+        .modal-content h3 { margin-top: 0; color: var(--primary); font-size: 1.1em; }
+        .modal-input {
+            width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #eee;
+            border-radius: 10px; font-size: 18px; box-sizing: border-box; text-align: center;
+        }
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btns button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+        .btn-confirm { background: var(--primary); color: white; }
+        .btn-cancel { background: #eee; color: #777; }
     </style>
 </head>
 <body>
@@ -117,7 +111,9 @@
         </div>
     </div>
 
-    <button class="btn-add-cat" onclick="addCategory()">＋ 新增消費通路分類</button>
+    <button class="btn-add-cat" onclick="openTextModal('新增分類', '請輸入分類名稱', (val) => { 
+        if(val) { data.push({ id: Date.now(), name: val, cards: [], isCollapsed: false }); save(); }
+    })">＋ 新增消費通路分類</button>
 
     <div id="mainDisplay"></div>
 
@@ -127,33 +123,70 @@
     </div>
 </div>
 
-<input type="number" inputmode="decimal" id="hiddenInput">
+<div id="customModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">標題</h3>
+        <p id="modalSub" style="font-size: 0.8em; color: #888; margin-bottom: 5px;"></p>
+        <input type="text" id="modalInput" class="modal-input">
+        <div class="modal-btns">
+            <button class="btn-cancel" onclick="closeModal()">取消</button>
+            <button class="btn-confirm" id="modalConfirmBtn">確定</button>
+        </div>
+    </div>
+</div>
 
 <script>
     let data = JSON.parse(localStorage.getItem('cardTrackerData_final')) || [];
+    let currentCallback = null;
 
     function save() {
         localStorage.setItem('cardTrackerData_final', JSON.stringify(data));
         render();
     }
 
-    // 通用的數字輸入函式，會強制手機彈出數字鍵盤
-    function promptNumber(msg, defaultVal = "") {
-        const result = prompt(msg, defaultVal);
-        if (result === null) return null;
-        const num = Number(result);
-        if (isNaN(num)) {
-            alert("請輸入有效的數字");
-            return promptNumber(msg, defaultVal);
-        }
-        return num;
+    // --- 彈窗控制中心 ---
+    function openModal(title, sub, defaultValue, type, inputmode, callback) {
+        const modal = document.getElementById('customModal');
+        const input = document.getElementById('modalInput');
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalSub').innerText = sub;
+        
+        input.value = defaultValue;
+        input.type = type; // text 或 number
+        input.setAttribute('inputmode', inputmode); // decimal 或 text
+        
+        modal.style.display = 'flex';
+        input.focus();
+        // 小技巧：延遲 focus 確保在手機上彈出鍵盤
+        setTimeout(() => input.select(), 100);
+
+        currentCallback = () => {
+            callback(input.value);
+            closeModal();
+        };
+        
+        document.getElementById('modalConfirmBtn').onclick = currentCallback;
     }
 
-    function addCategory() {
-        const name = prompt("輸入分類名稱 (例如：海外、外送):");
-        if (name) { data.push({ id: Date.now(), name, cards: [], isCollapsed: false }); save(); }
+    // 針對文字輸入
+    function openTextModal(title, sub, callback, def = "") {
+        openModal(title, sub, def, 'text', 'text', callback);
     }
 
+    // 針對數字輸入 (關鍵優化)
+    function openNumModal(title, sub, callback, def = "") {
+        openModal(title, sub, def, 'number', 'decimal', (val) => {
+            const num = Number(val);
+            if (!isNaN(num)) callback(num);
+            else alert("請輸入有效數字");
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('customModal').style.display = 'none';
+    }
+
+    // --- 業務邏輯 ---
     function toggleCollapse(catId) {
         const cat = data.find(c => c.id === catId);
         cat.isCollapsed = !cat.isCollapsed;
@@ -162,38 +195,33 @@
 
     function addCardToCat(catId, event) {
         event.stopPropagation();
-        const name = prompt("卡片名稱:");
-        if (!name) return;
-
-        const limit = promptNumber("回饋上限金額 (元):", "300");
-        if (limit === null) return;
-        const rate = promptNumber("回饋率 (%):", "3");
-        if (rate === null) return;
-        
-        data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
-        save();
+        openTextModal('新增卡片', '請輸入卡片名稱', (name) => {
+            if(!name) return;
+            openNumModal('設定上限', '請輸入回饋上限金額', (limit) => {
+                openNumModal('設定比率', '請輸入回饋比率 (%)', (rate) => {
+                    data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
+                    save();
+                }, "3");
+            }, "300");
+        });
     }
 
     function addSpend(catId, cardId) {
-        const amount = promptNumber("紀錄消費金額:");
-        if (amount === null) return;
-        data.find(c => c.id === catId).cards.find(cd => cd.id === cardId).spent += amount;
-        save();
+        openNumModal('紀錄消費', '請輸入本次消費金額', (amount) => {
+            data.find(c => c.id === catId).cards.find(cd => cd.id === cardId).spent += amount;
+            save();
+        });
     }
 
     function editField(catId, cardId, field) {
         const card = data.find(c => c.id === catId).cards.find(cd => cd.id === cardId);
-        
         if (field === 'name') {
-            const newName = prompt("修改卡片名稱:", card.name);
-            if (newName) { card.name = newName; save(); }
+            openTextModal('修改名稱', '', (val) => { if(val) {card.name = val; save();} }, card.name);
         } else {
-            const newVal = promptNumber(`修改 ${field}:`, card[field]);
-            if (newVal !== null) { card[field] = newVal; save(); }
+            openNumModal(`修改 ${field}`, '', (val) => { card[field] = val; save(); }, card[field]);
         }
     }
 
-    // 刪除與備份功能保持不變...
     function deleteCard(catId, cardId) {
         if (confirm("刪除這張卡片紀錄？")) {
             const cat = data.find(c => c.id === catId);
@@ -251,7 +279,7 @@
                             <div class="category-total">分類累計: $${catTotal.toLocaleString()}</div>
                         </div>
                         <div style="display:flex; align-items:center;">
-                            <button class="btn-tool" onclick="addCardToCat(${cat.id}, event)" style="font-size:0.75em;">＋卡片</button>
+                            <button class="btn-tool" onclick="addCardToCat(${cat.id}, event)" style="font-size:0.75em; border-color:var(--primary);">＋卡片</button>
                             <button class="btn-icon" onclick="deleteCategory(${cat.id}, event)" style="margin-left:5px;">✕</button>
                         </div>
                     </div>
@@ -270,19 +298,19 @@
         const text = JSON.stringify(data);
         const el = document.createElement('textarea');
         el.value = text;
-        document.body.appendChild(el);
-        el.select();
+        document.body.appendChild(el); el.select();
         document.execCommand('copy');
         document.body.removeChild(el);
-        alert("資料已複製！請貼到記事本備份。");
+        alert("資料已複製！");
     }
 
     function importData() {
-        const json = prompt("請貼上備份資料：");
-        if (json) {
-            try { data = JSON.parse(json); save(); alert("還原成功！"); } 
-            catch(e) { alert("格式錯誤！"); }
-        }
+        openTextModal('還原資料', '請貼上備份資料', (json) => {
+            if (json) {
+                try { data = JSON.parse(json); save(); alert("還原成功！"); } 
+                catch(e) { alert("格式錯誤！"); }
+            }
+        });
     }
 
     render();
