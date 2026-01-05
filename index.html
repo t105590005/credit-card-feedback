@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>信用卡回饋助手</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        :root { --primary: #37474f; --accent: #2196f3; --success: #4caf50; --danger: #f44336; --bg: #f5f7f9; }
+        body { font-family: -apple-system, sans-serif; background-color: var(--bg); padding: 15px; color: #333; margin: 0; -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 600px; margin: auto; padding-bottom: 50px; }
+        
+        /* 全域統計面板 */
+        .dashboard { background: linear-gradient(135deg, #37474f 0%, #263238 100%); color: white; padding: 25px 20px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; justify-content: space-around; text-align: center; }
+        .stat-item { flex: 1; }
+        .stat-label { font-size: 0.85em; opacity: 0.8; margin-bottom: 5px; }
+        .stat-value { font-size: 1.6em; font-weight: bold; color: #fff; }
+        .stat-value.reward { color: #ffd54f; }
+
+        /* 通路分類 */
+        .category-group { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden; }
+        .category-header { background: #eceff1; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .category-info { display: flex; flex-direction: column; }
+        .category-title { font-weight: bold; font-size: 1.1em; color: var(--primary); }
+        .category-total { font-size: 0.8em; color: #607d8b; }
+
+        /* 卡片列表 */
+        .card-list { padding: 0 15px; }
+        .card-item { border-bottom: 1px solid #f1f3f5; padding: 15px 0; }
+        .card-item:last-child { border-bottom: none; }
+        .card-info-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .card-name { font-weight: bold; font-size: 1.1em; color: #2d3436; }
+
+        /* 進度條 */
+        .progress-container { background: #eee; height: 12px; border-radius: 6px; overflow: hidden; margin: 12px 0; }
+        .progress-bar { height: 100%; background: #81c784; transition: width 0.3s; }
+        .progress-bar.warning { background: var(--danger); }
+        
+        .progress-details { display: flex; justify-content: space-between; font-size: 0.9em; color: #636e72; }
+        .editable { color: var(--accent); cursor: pointer; font-weight: bold; text-decoration: underline; text-underline-offset: 3px; }
+
+        /* 按鈕優化 (加大適合手機點擊) */
+        .btn-add-cat { background: var(--primary); color: white; padding: 15px; width: 100%; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; margin-bottom: 20px; font-size: 1em; }
+        .btn-spend { background: var(--accent); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; cursor: pointer; font-weight: bold; }
+        .btn-add-card { background: white; border: 1px solid var(--accent); color: var(--accent); padding: 6px 10px; border-radius: 6px; font-size: 0.8em; cursor: pointer; font-weight: bold; }
+        .btn-del { color: #b2bec3; background: none; border: none; font-size: 0.8em; cursor: pointer; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 style="text-align: center; color: var(--primary); margin: 20px 0;">💳 信用卡回饋助手</h2>
+
+    <div class="dashboard" id="dashboard">
+        <div class="stat-item">
+            <div class="stat-label">本月總消費</div>
+            <div class="stat-value" id="globalTotalSpent">$0</div>
+        </div>
+        <div style="width: 1px; background: rgba(255,255,255,0.2); margin: 5px 0;"></div>
+        <div class="stat-item">
+            <div class="stat-label">預估總回饋</div>
+            <div class="stat-value reward" id="globalTotalReward">$0</div>
+        </div>
+    </div>
+
+    <button class="btn-add-cat" onclick="addCategory()">＋ 新增消費通路分類</button>
+
+    <div id="mainDisplay"></div>
+</div>
+
+<script>
+    let data = JSON.parse(localStorage.getItem('finalCardTrackerData')) || [];
+
+    function save() {
+        localStorage.setItem('finalCardTrackerData', JSON.stringify(data));
+        render();
+    }
+
+    function addCategory() {
+        const name = prompt("請輸入分類名稱 (例如：海外、外送):");
+        if (name) { data.push({ id: Date.now(), name, cards: [] }); save(); }
+    }
+
+    function addCardToCat(catId) {
+        const name = prompt("卡片名稱:");
+        const limit = parseFloat(prompt("回饋上限金額:"));
+        const rate = parseFloat(prompt("回饋率 (%):"));
+        if (!name || isNaN(limit) || isNaN(rate)) return;
+        data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0 });
+        save();
+    }
+
+    function addSpend(catId, cardId) {
+        const amount = parseFloat(prompt("新增消費金額:"));
+        if (isNaN(amount)) return;
+        data.find(c => c.id === catId).cards.find(cd => cd.id === cardId).spent += amount;
+        save();
+    }
+
+    function editField(catId, cardId, field) {
+        const card = data.find(c => c.id === catId).cards.find(cd => cd.id === cardId);
+        let newVal = prompt(`修改 ${field}:`, card[field]);
+        if (newVal !== null) {
+            card[field] = (field === 'name') ? newVal : parseFloat(newVal);
+            save();
+        }
+    }
+
+    function deleteCard(catId, cardId) {
+        if (confirm("刪除此卡片？")) {
+            const cat = data.find(c => c.id === catId);
+            cat.cards = cat.cards.filter(cd => cd.id !== cardId);
+            save();
+        }
+    }
+
+    function deleteCategory(catId) {
+        if (confirm("刪除整個分類？")) {
+            data = data.filter(c => c.id !== catId);
+            save();
+        }
+    }
+
+    function render() {
+        const container = document.getElementById('mainDisplay');
+        container.innerHTML = '';
+        
+        let globalSpent = 0;
+        let globalReward = 0;
+
+        data.forEach(cat => {
+            let catTotalSpent = 0;
+            let cardHtml = cat.cards.map(card => {
+                const maxSpend = card.limit / (card.rate / 100);
+                const percent = Math.min((card.spent / maxSpend) * 100, 100).toFixed(1);
+                const cardReward = Math.min(card.spent * (card.rate / 100), card.limit);
+                
+                catTotalSpent += card.spent;
+                globalSpent += card.spent;
+                globalReward += cardReward;
+
+                return `
+                    <div class="card-item">
+                        <div class="card-info-top">
+                            <span class="card-name" onclick="editField(${cat.id}, ${card.id}, 'name')">${card.name} ✎</span>
+                            <button class="btn-spend" onclick="addSpend(${cat.id}, ${card.id})">＋ 紀錄</button>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar ${card.spent >= maxSpend ? 'warning' : ''}" style="width: ${percent}%"></div>
+                        </div>
+                        <div class="progress-details">
+                            <span>已刷: <span class="editable" onclick="editField(${cat.id}, ${card.id}, 'spent')">$${card.spent.toLocaleString()}</span></span>
+                            <span>上限 <span class="editable" onclick="editField(${cat.id}, ${card.id}, 'limit')">$${card.limit}</span> (<span class="editable" onclick="editField(${cat.id}, ${card.id}, 'rate')">${card.rate}%</span>)</span>
+                        </div>
+                        <div style="text-align:right"><button class="btn-del" onclick="deleteCard(${cat.id}, ${card.id})">✕ 刪除卡片</button></div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML += `
+                <div class="category-group">
+                    <div class="category-header">
+                        <div class="category-info">
+                            <span class="category-title">${cat.name}</span>
+                            <span class="category-total">分類小計: $${catTotalSpent.toLocaleString()}</span>
+                        </div>
+                        <div style="display:flex; align-items:center;">
+                            <button class="btn-add-card" onclick="addCardToCat(${cat.id})">＋卡片</button>
+                            <button class="btn-del" onclick="deleteCategory(${cat.id})">✕</button>
+                        </div>
+                    </div>
+                    <div class="card-list">
+                        ${cardHtml || '<div style="color:#999; text-align:center; padding:15px; font-size:0.85em;">點擊「＋卡片」開始紀錄</div>'}
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('globalTotalSpent').innerText = '$' + globalSpent.toLocaleString();
+        document.getElementById('globalTotalReward').innerText = '$' + Math.floor(globalReward).toLocaleString();
+    }
+
+    render();
+</script>
+
+</body>
+</html>
