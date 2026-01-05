@@ -15,6 +15,6 @@ The Credit Card Feedback project is designed to collect and analyze user feedbac
 3. Launch the application or run the scripts as described in the documentation.
 
 4. Alternatively, you can access the application directly using GitHub Pages:
-   [專案網頁](https://t105590005.github.io/credit-card-feedback/)
+   [(https://t105590005.github.io/credit-card-feedback/)]
 
 For more details, please refer to the comprehensive documentation in this repository.
