@@ -1,7 +1,7 @@
 # Credit Card Feedback
 
 ## Description
-The Credit Card Feedback project is designed to collect and analyze user feedback on credit card usage and services. This tool aims to provide insights and improvements for financial institutions and [...]
+The Credit Card Feedback project is designed to collect and analyze user feedback on credit card usage and services. This tool aims to provide insights and improvements for financial institutions and other stakeholders.
 
 ## Usage
 1. Clone the repository:
@@ -15,8 +15,6 @@ The Credit Card Feedback project is designed to collect and analyze user feedbac
 3. Launch the application or run the scripts as described in the documentation.
 
 4. Alternatively, you can access the application directly using GitHub Pages:
-   ```
-   https://t105590005.github.io/credit-card-feedback/
-   ```
+   [專案網頁](https://t105590005.github.io/credit-card-feedback/)
 
 For more details, please refer to the comprehensive documentation in this repository.
