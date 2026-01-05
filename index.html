@@ -65,11 +65,11 @@
 <div id="customModal"><div class="modal-content" id="modalBox"></div></div>
 
 <script>
-    // 使用 v9 版本
-    let data = JSON.parse(localStorage.getItem('cardTracker_v9')) || [];
+    // 使用 v10 版本
+    let data = JSON.parse(localStorage.getItem('cardTracker_v10')) || [];
 
     function save() {
-        localStorage.setItem('cardTracker_v9', JSON.stringify(data));
+        localStorage.setItem('cardTracker_v10', JSON.stringify(data));
         render();
     }
 
@@ -122,7 +122,6 @@
     function doSyncEdit(oldName, field) {
         const val = document.getElementById('editVal').value;
         const finalVal = (field === 'name') ? val.trim() : Number(val);
-        
         data.forEach(cat => {
             cat.cards.forEach(card => {
                 if(card.name.trim() === oldName.trim()) card[field] = finalVal;
@@ -141,26 +140,42 @@
     function render() {
         const container = document.getElementById('mainDisplay');
         container.innerHTML = '';
-        let globalSpentMap = {}; 
+        
+        // 第一步：先掃描所有卡片，建立名稱與數據的對照表
+        let globalStats = {};
+        data.forEach(cat => {
+            cat.cards.forEach(card => {
+                const n = card.name.trim();
+                if(!globalStats[n]) {
+                    globalStats[n] = { spent: card.spent, limit: card.limit, rate: card.rate };
+                }
+            });
+        });
 
+        let totalS = 0, totalR = 0;
+
+        // 第二步：渲染畫面，進度條統一使用全域數據
         data.forEach(cat => {
             let catHtml = "";
+            let catSubtotal = 0;
+
             cat.cards.forEach(card => {
                 const name = card.name.trim();
-                globalSpentMap[name] = { spent: card.spent, limit: card.limit, rate: card.rate };
-                
-                const maxSpend = card.limit / (card.rate / 100);
-                const percent = Math.min((card.spent / maxSpend) * 100, 100);
+                const stats = globalStats[name]; // 取得該卡名的統一數據
+                catSubtotal += card.spent; // 分類小計僅計算該項目，但顯示與進度條使用同步數據
+
+                const maxSpend = stats.limit / (stats.rate / 100);
+                const percent = Math.min((stats.spent / maxSpend) * 100, 100);
 
                 catHtml += `<div class="card-item">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="font-weight:700; color:#4834d4; font-size:1.1em;" onclick="showEdit('${name}', 'name')">${name}</span>
                         <button class="btn-spend" onclick="showAddSpend('${name}')">＋紀錄</button>
                     </div>
-                    <div class="progress-container"><div class="progress-bar ${card.spent >= maxSpend ? 'warning' : ''}" style="width: ${percent}%"></div></div>
+                    <div class="progress-container"><div class="progress-bar ${stats.spent >= maxSpend ? 'warning' : ''}" style="width: ${percent}%"></div></div>
                     <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#636e72;">
-                        <span>加總已刷: <span class="editable" onclick="showEdit('${name}', 'spent')">$${card.spent.toLocaleString()}</span></span>
-                        <span>上限: <span class="editable" onclick="showEdit('${name}', 'limit')">$${card.limit}</span> (<span class="editable" onclick="showEdit('${name}', 'rate')">${card.rate}</span>%)</span>
+                        <span>加總已刷: <span class="editable" onclick="showEdit('${name}', 'spent')">$${stats.spent.toLocaleString()}</span></span>
+                        <span>上限: <span class="editable" onclick="showEdit('${name}', 'limit')">$${stats.limit}</span> (<span class="editable" onclick="showEdit('${name}', 'rate')">${stats.rate}</span>%)</span>
                     </div>
                     <div style="text-align:right;"><button class="btn-icon" onclick="deleteCard(${cat.id}, ${card.id})">✕</button></div>
                 </div>`;
@@ -168,16 +183,15 @@
             container.innerHTML += `<div class="category-group">
                 <div class="category-header" onclick="const c=data.find(x=>x.id===${cat.id}); c.isCollapsed=!c.isCollapsed; save();">
                     <div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div>
-                    <button onclick="event.stopPropagation(); showAddCard(${cat.id})" style="font-size:0.75em; border:1px solid var(--primary); background:#fff; color:var(--primary); padding:5px 10px; border-radius:8px; font-weight:bold;">＋卡片</button>
                 </div>
                 <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc">無卡片</div>'}</div>
             </div>`;
         });
 
-        let totalS = 0, totalR = 0;
-        for(let n in globalSpentMap) {
-            totalS += globalSpentMap[n].spent;
-            totalR += Math.min(globalSpentMap[n].spent * (globalSpentMap[n].rate/100), globalSpentMap[n].limit);
+        // 計算儀表板
+        for(let n in globalStats) {
+            totalS += globalStats[n].spent;
+            totalR += Math.min(globalStats[n].spent * (globalStats[n].rate/100), globalStats[n].limit);
         }
         document.getElementById('globalTotalSpent').innerText = '$' + totalS.toLocaleString();
         document.getElementById('globalTotalReward').innerText = '$' + Math.floor(totalR).toLocaleString();
