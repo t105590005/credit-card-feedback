@@ -28,8 +28,8 @@
         .category-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; background: #f9faff; cursor: pointer; }
         .category-title { font-weight: bold; color: var(--primary); font-size: 1.1em; }
         .card-item { padding: 18px 16px; border-bottom: 1px solid #f1f3f5; }
-        .progress-container { background: #dfe6e9; height: 14px; border-radius: 7px; margin: 10px 0; border: 1px solid #dcdde1; }
-        .progress-bar { height: 100%; border-radius: 7px; transition: width 0.6s, background 0.3s; width: 0%; }
+        .progress-container { background: #dfe6e9; height: 18px; border-radius: 9px; margin: 10px 0; border: 1px solid #dcdde1; cursor: pointer; position: relative; }
+        .progress-bar { height: 100%; border-radius: 9px; transition: width 0.6s, background 0.3s; width: 0%; }
         .bg-green { background: linear-gradient(90deg, #55efc4, #00b894); }
         .bg-orange { background: linear-gradient(90deg, #fab1a0, #ff9f43); }
         .bg-red { background: linear-gradient(90deg, #ff7675, #d63031); }
@@ -66,7 +66,7 @@
 <div id="customModal"><div class="modal-content" id="modalBox"></div></div>
 
 <script>
-    const STORAGE_KEY = 'cardTracker_v14';
+    const STORAGE_KEY = 'cardTracker_v16';
     let data = [];
 
     function load() { try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { data = []; } render(); }
@@ -91,7 +91,6 @@
         modal.style.display = 'flex';
     }
 
-    // 智慧帶入：自動填入現有同名卡片的比率與上限
     function autoFill(name) {
         for(let cat of data) {
             for(let card of cat.cards) {
@@ -122,7 +121,6 @@
         modal.style.display = 'flex';
     }
 
-    // 關鍵同步：修改上限與比率時，強行同步所有同名卡片
     function doEdit(catId, cardId, field) {
         const val = document.getElementById('editVal').value;
         const targetCat = data.find(c => c.id === catId);
@@ -131,15 +129,41 @@
         const finalVal = (field === 'name' || field === 'note') ? val.trim() : Number(val);
 
         if (field === 'limit' || field === 'rate' || field === 'name') {
-            // 全域強行同步
             data.forEach(cat => cat.cards.forEach(card => {
                 if(card.name.trim() === oldName.trim()) card[field] = finalVal;
             }));
         } else {
-            // 備註與金額維持通路獨立
             targetCard[field] = finalVal;
         }
         save(); closeModal();
+    }
+
+    // --- 修改：顯示詳細回饋與剩餘可刷金額 ---
+    function showRewardDetail(cardName) {
+        let totalS = 0, limit = 0, rate = 0;
+        data.forEach(cat => cat.cards.forEach(card => {
+            if(card.name.trim() === cardName.trim()) {
+                totalS += card.spent;
+                limit = card.limit;
+                rate = card.rate;
+            }
+        }));
+        
+        const maxS = Math.round(limit / (rate / 100)) || 0;
+        const currentReward = Math.floor(Math.min(totalS * (rate/100), limit));
+        const remainingLimit = limit - currentReward;
+        const remainingSpend = Math.max(0, maxS - totalS);
+        
+        modalBox.innerHTML = `
+            <h3>${cardName} 回饋進度</h3>
+            <p>累積消費：$${totalS.toLocaleString()}</p>
+            <p>目前回饋：<b style="color:var(--success)">$${currentReward.toLocaleString()}</b></p>
+            <p>剩餘回饋額度：$${remainingLimit.toLocaleString()}</p>
+            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            <p>距離消費上限還差：<b style="color:var(--danger)">$${remainingSpend.toLocaleString()}</b></p>
+            <div style="margin-top:20px;"><button style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold" onclick="closeModal()">關閉</button></div>
+        `;
+        modal.style.display = 'flex';
     }
 
     function render() {
@@ -159,16 +183,19 @@
                 const totalS = globalSpent[card.name.trim()];
                 const maxS = Math.round(card.limit / (card.rate / 100)) || 1;
                 const pct = Math.min((totalS / maxS) * 100, 100);
+                const remainToMax = Math.max(0, maxS - totalS);
                 let color = "bg-green"; if(pct>=100) color="bg-red"; else if(pct>=80) color="bg-orange";
 
                 catHtml += `<div class="card-item">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                         <div><span style="font-weight:700; color:#4834d4; font-size:1.1em;" onclick="showEdit(${cat.id}, ${card.id}, 'name')">${card.name}</span><br>
                         <span class="info-tag note-tag" onclick="showEdit(${cat.id}, ${card.id}, 'note')">${card.note || '+ 備註'}</span>
-                        <span class="info-tag limit-tag">上限刷 $${maxS.toLocaleString()}</span></div>
+                        <span class="info-tag limit-tag">還能刷 $${remainToMax.toLocaleString()}</span></div>
                         <button class="btn-spend" onclick="showAddSpend(${cat.id}, ${card.id})">＋紀錄</button>
                     </div>
-                    <div class="progress-container"><div class="progress-bar ${color}" style="width: ${pct}%"></div></div>
+                    <div class="progress-container" onclick="showRewardDetail('${card.name}')">
+                        <div class="progress-bar ${color}" style="width: ${pct}%"></div>
+                    </div>
                     <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#636e72;">
                         <span>共刷: <b>$${totalS.toLocaleString()}</b> (此處: <span class="editable" onclick="showEdit(${cat.id}, ${card.id}, 'spent')">$${card.spent}</span>)</span>
                         <span>上限: <span class="editable" onclick="showEdit(${cat.id}, ${card.id}, 'limit')">$${card.limit}</span> (<span class="editable" onclick="showEdit(${cat.id}, ${card.id}, 'rate')">${card.rate}</span>%)</span>
@@ -212,7 +239,7 @@
         const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            try { const imported = JSON.parse(e.target.result); if (Array.isArray(imported)) { if (confirm("匯入將覆蓋？")) { data = imported; save(); } } } catch (err) { alert("格式錯誤"); }
+            try { const imported = JSON.parse(e.target.result); if (Array.isArray(imported)) { if (confirm("匯入將覆蓋現有資料？")) { data = imported; save(); } } } catch (err) { alert("格式錯誤"); }
         };
         reader.readAsText(file);
     }
