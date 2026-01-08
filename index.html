@@ -4,204 +4,351 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>信用卡回饋助手</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    <link rel="apple-touch-icon" href="icon.png">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #6c5ce7; --secondary: #a29bfe; --success: #00b894;
-            --warning: #fab1a0; --danger: #ff7675; --bg-color: #f0f3f7; --card-bg: #ffffff;
-            --text-main: #2d3436; --note-bg: #fff9db; --note-text: #f08c00;
+            --bg: #f8f9ff; --card-bg: #ffffff;
+            --primary: #5f27cd; --primary-light: #9980FA;
+            --success: #00d2d3; --warning: #ff9f43; --danger: #ee5253;
+            /* 紫色文字色系 */
+            --text-dark: #341f97; /* 深紫大標 */
+            --text-card: #5f27cd; /* 卡片標題紫 */
+            --text-light: #8395a7; --sub-bg: #f3f0ff; --sub-text: #5f27cd;
         }
-        body { font-family: -apple-system, sans-serif; background-color: var(--bg-color); padding: 16px; margin: 0; -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 500px; margin: auto; padding-bottom: 100px; }
-        
-        /* 儀表板 */
-        .dashboard {
-            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
-            padding: 24px 20px; border-radius: 20px; margin-bottom: 20px;
-            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.2); display: flex; justify-content: space-around; text-align: center; color: white;
+
+        body { 
+            font-family: 'Quicksand', 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+            background-color: var(--bg); color: var(--text-dark);
+            margin: 0; padding: 16px; -webkit-tap-highlight-color: transparent;
         }
-        .stat-value { font-size: 1.6em; font-weight: 800; }
-        .stat-value.reward { color: #ffe66d; }
 
-        /* 分類標頭 */
-        .category-group { background: var(--card-bg); border-radius: 18px; margin-bottom: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; overflow: hidden; }
-        .category-header { padding: 16px; display: flex; justify-content: space-between; align-items: center; background: #f9faff; cursor: pointer; transition: background 0.2s; }
-        .category-header:active { background: #f1f3f5; }
-        .category-title { font-weight: bold; color: var(--primary); font-size: 1.1em; }
-        .category-subtitle { font-size: 0.75em; color: #888; margin-top: 2px; }
+        .container { max-width: 480px; margin: 0 auto; padding-bottom: 120px; }
 
-        /* 卡片內容 */
-        .card-list { transition: max-height 0.3s ease-out; max-height: 3000px; overflow: hidden; }
-        .card-list.collapsed { max-height: 0; }
-        .card-item { padding: 18px 16px; border-bottom: 1px solid #f1f3f5; }
+        /* 頂部紫色儀表板 */
+        .header-stats {
+            background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);
+            border-radius: 28px; padding: 25px; color: white;
+            box-shadow: 0 12px 30px rgba(95, 39, 205, 0.3);
+            margin-bottom: 25px; display: flex; justify-content: space-between;
+        }
+        .stat-item span { font-size: 0.85em; opacity: 0.85; display: block; margin-bottom: 5px; font-weight: 500; }
+        .stat-value { font-size: 1.8em; font-weight: 700; letter-spacing: -0.5px; }
+
+        /* 分類卡片 */
+        .category-card {
+            background: var(--card-bg); border-radius: 24px; margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.04); border: 1px solid rgba(95, 39, 205, 0.08);
+            overflow: hidden;
+        }
+        .category-head {
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: #ffffff; cursor: pointer;
+        }
+        .category-info { display: flex; flex-direction: column; gap: 6px; }
+        .category-name { font-weight: 700; font-size: 1.2em; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+        .category-badge { 
+            font-size: 0.75em; color: var(--sub-text); background: var(--sub-bg);
+            padding: 5px 12px; border-radius: 14px; font-weight: 700; width: fit-content;
+        }
+        .btn-add-item {
+            background: none; border: 2px solid var(--primary-light); color: var(--primary-light);
+            padding: 6px 14px; border-radius: 12px; font-size: 0.75em; font-weight: 700; transition: 0.2s;
+        }
+
+        /* 卡片內容區 */
+        .card-list { display: block; overflow: hidden; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-list.collapsed { display: none; }
+        .card-item { padding: 22px 20px; border-top: 1px solid #f8f9ff; position: relative; }
 
         /* 進度條 */
-        .progress-container { background: #dfe6e9; height: 18px; border-radius: 9px; margin: 10px 0; border: 1px solid #dcdde1; cursor: pointer; position: relative; }
-        .progress-bar { height: 100%; border-radius: 9px; transition: width 0.6s, background 0.3s; width: 0%; }
-        .bg-green { background: linear-gradient(90deg, #55efc4, #00b894); }
-        .bg-orange { background: linear-gradient(90deg, #fab1a0, #ff9f43); }
-        .bg-red { background: linear-gradient(90deg, #ff7675, #d63031); }
+        .progress-box { background: #f0f1f7; height: 14px; border-radius: 10px; margin: 14px 0; cursor: pointer; overflow: hidden; }
+        .progress-fill { height: 100%; border-radius: 10px; transition: width 0.8s ease; }
+        .bg-green { background: linear-gradient(90deg, #00d2d3, #1dd1a1); }
+        .bg-orange { background: linear-gradient(90deg, #ff9f43, #ff6b6b); }
+        .bg-red { background: linear-gradient(90deg, #ee5253, #ff4757); }
 
-        /* 標籤與按鈕 */
-        .info-tag { font-size: 0.72em; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
-        .note-tag { background: var(--note-bg); color: var(--note-text); border: 1px solid #ffe066; cursor: pointer; }
-        .limit-tag { background: #e3f2fd; color: #1976d2; border: 1px solid #bbdefb; margin-left: 4px; }
-        .editable { color: #0984e3; font-weight: bold; border-bottom: 2px solid #74b9ff; cursor: pointer; }
+        /* 左側文字全面紫色化 */
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .card-title { font-weight: 700; font-size: 1.15em; color: var(--text-card); cursor: pointer; }
+        .note-tag { font-size: 0.8em; color: var(--primary-light); margin-top: 6px; display: block; font-weight: 500; }
+        .limit-hint { font-size: 0.8em; color: var(--primary-light); font-weight: 700; margin-top: 4px; }
         
-        /* 修正後的紀錄按鈕樣式 */
-        .btn-spend { 
-            background: var(--primary); color: white; border: none; 
-            padding: 8px 16px; border-radius: 10px; font-weight: bold; 
-            font-size: 0.9em; min-width: 70px; cursor: pointer;
+        .btn-record { 
+            background: var(--primary); color: white; border: none; padding: 10px 18px; 
+            border-radius: 14px; font-weight: 700; font-size: 0.9em; 
+            box-shadow: 0 6px 15px rgba(95, 39, 205, 0.25); cursor: pointer;
         }
 
-        /* 彈窗 */
-        #customModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 24px; width: 85%; max-width: 350px; }
-        .modal-input { width: 100%; padding: 12px; border: 2px solid #f1f3f5; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #f9f9f9; margin: 8px 0; }
-        
-        .admin-tools { display: flex; gap: 8px; margin-top: 30px; }
-        .btn-admin { flex: 1; padding: 12px; font-size: 0.8em; border-radius: 10px; border: 1px solid #ddd; background: #fff; color: #666; font-weight: bold; cursor: pointer; text-align: center; }
+        .card-footer { display: flex; justify-content: space-between; font-size: 0.85em; color: #8395a7; margin-top: 10px; font-weight: 500; }
+        .clickable { color: var(--primary-light); font-weight: 700; text-decoration: underline; cursor: pointer; }
+
+        /* 工具欄 */
+        .bottom-tools { display: flex; gap: 12px; margin-top: 25px; }
+        .btn-tool {
+            flex: 1; padding: 15px; border-radius: 18px; border: 1.5px solid #e0e6ed;
+            background: white; color: var(--text-light); font-weight: 700; font-size: 0.85em;
+            display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;
+        }
+
+        /* 彈窗樣式 */
+        #modalOverlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(52, 31, 151, 0.5); backdrop-filter: blur(8px); 
+            z-index: 999; align-items: flex-end; justify-content: center;
+        }
+        .modal-body { 
+            background: white; width: 100%; max-width: 500px; padding: 35px; 
+            border-radius: 35px 35px 0 0; box-shadow: 0 -15px 40px rgba(0,0,0,0.15);
+            animation: slideUp 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .input-box { width: 100%; padding: 15px; border: 2px solid #f1f5f9; border-radius: 16px; font-size: 16px; box-sizing: border-box; background: #f8fafc; outline: none; margin: 10px 0; }
+        .modal-btns { display: flex; gap: 15px; margin-top: 25px; }
+        .btn-cancel { flex: 1; padding: 16px; border-radius: 16px; border: none; background: #f1f5f9; color: var(--text-light); font-weight: 700; cursor: pointer; }
+        .btn-confirm { flex: 2; padding: 16px; border-radius: 16px; border: none; background: var(--primary); color: white; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="dashboard">
-        <div><div style="font-size:0.85em; opacity:0.9;">總刷卡額</div><div class="stat-value" id="globalTotalSpent">$0</div></div>
-        <div><div style="font-size:0.85em; opacity:0.9;">預計回饋</div><div class="stat-value reward" id="globalTotalReward">$0</div></div>
+    <div class="header-stats">
+        <div class="stat-item">
+            <span>累積加總消費額</span>
+            <div class="stat-value" id="globalTotalSpent">$0</div>
+        </div>
+        <div class="stat-item" style="text-align: right;">
+            <span>預計累積回饋</span>
+            <div class="stat-value" style="color: #ffd166" id="globalTotalReward">$0</div>
+        </div>
     </div>
-    <button style="background:#fff; color:var(--primary); padding:16px; width:100%; border:2px solid var(--primary); border-radius:14px; font-weight:800; margin-bottom:20px; cursor:pointer;" onclick="showAddCat()">＋ 新增消費分類</button>
-    
+
+    <button onclick="showAddCat()" style="width: 100%; padding: 20px; border-radius: 22px; border: none; background: white; color: var(--primary); font-weight: 800; font-size: 1.05em; box-shadow: 0 10px 25px rgba(0,0,0,0.06); margin-bottom: 25px; cursor: pointer;">
+        ✨ 新增消費分類頻道
+    </button>
+
     <div id="mainDisplay"></div>
-    
-    <div class="admin-tools">
-        <button class="btn-admin" onclick="exportData()">📤 備份資料</button>
-        <button class="btn-admin" onclick="document.getElementById('fileInput').click()">📥 匯入資料</button>
-        <button class="btn-admin" style="color:var(--danger); border-color:var(--danger)" onclick="resetAll()">🧹 金額歸零</button>
+
+    <div class="bottom-tools">
+        <button class="btn-tool" onclick="exportData()">📤 匯出備份</button>
+        <button class="btn-tool" onclick="document.getElementById('fileInput').click()">📥 匯入紀錄</button>
+        <button class="btn-tool" style="color: var(--danger); border-color: #ffccd5;" onclick="resetAll()">🧹 清空歸零</button>
         <input type="file" id="fileInput" style="display:none" onchange="importData(event)" accept=".json">
     </div>
 </div>
 
-<div id="customModal"><div class="modal-content" id="modalBox"></div></div>
+<div id="modalOverlay"><div class="modal-body" id="modalBox"></div></div>
 
 <script>
-    const STORAGE_KEY = 'cardTracker_v18';
+    // 邏輯核心維持 2026 PRO 版本結構
+    const STORAGE_KEY = 'cardTracker_2026_pro_purple';
     let data = [];
 
-    function load() { try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { data = []; } render(); }
+    function load() {
+        try {
+            let saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            data = migrate(saved);
+            render();
+        } catch(e) { data = []; render(); }
+    }
+
+    function migrate(list) {
+        return list.map(cat => ({
+            ...cat,
+            cards: cat.cards.map(card => {
+                if (!card.tiers) {
+                    return { ...card, tiers: [{ rate: card.rate || 0, limit: card.limit || 0 }] };
+                }
+                return card;
+            })
+        }));
+    }
+
     function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); render(); }
 
-    const modal = document.getElementById('customModal');
+    const modal = document.getElementById('modalOverlay');
     const modalBox = document.getElementById('modalBox');
     function closeModal() { modal.style.display = 'none'; }
 
-    // 修復後的分類收合控制
-    function toggleCategory(catId) {
-        const cat = data.find(c => c.id === catId);
-        if (cat) {
-            cat.isCollapsed = !cat.isCollapsed;
-            save();
-        }
+    function toggleCategory(id) {
+        const cat = data.find(c => c.id === id);
+        if (cat) { cat.isCollapsed = !cat.isCollapsed; save(); }
     }
 
+    function render() {
+        const container = document.getElementById('mainDisplay');
+        container.innerHTML = '';
+        let gSpent = {};
+        data.forEach(cat => cat.cards.forEach(card => {
+            const n = card.name.trim();
+            gSpent[n] = (gSpent[n] || 0) + (card.spent || 0);
+        }));
+
+        data.forEach(cat => {
+            let catHtml = "", catTotal = 0;
+            cat.cards.forEach(card => {
+                const totalS = gSpent[card.name.trim()];
+                catTotal += (card.spent || 0);
+                
+                let minCap = 9999999;
+                card.tiers.forEach(t => {
+                    if (t.limit < 999999) {
+                        const cap = Math.round(t.limit / (t.rate / 100));
+                        if (cap < minCap) minCap = cap;
+                    }
+                });
+                
+                const pct = Math.min((totalS / minCap) * 100, 100);
+                const rem = Math.max(0, minCap - totalS);
+                let col = "bg-green"; if(pct>=100) col="bg-red"; else if(pct>=80) col="bg-orange";
+
+                catHtml += `
+                <div class="card-item">
+                    <div class="card-top">
+                        <div onclick="showEdit(${cat.id}, ${card.id}, 'name')">
+                            <div class="card-title">${card.name}</div>
+                            <span class="note-tag" onclick="event.stopPropagation(); showEdit(${cat.id}, ${card.id}, 'note')">${card.note || '+ 點擊新增備註'}</span>
+                            <div class="limit-hint">距離封頂還能刷：$${rem.toLocaleString()}</div>
+                        </div>
+                        <button class="btn-record" onclick="showRecord(${cat.id}, ${card.id})">＋紀錄</button>
+                    </div>
+                    <div class="progress-box" onclick="showRewardDetail('${card.name}')">
+                        <div class="progress-fill ${col}" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="card-footer">
+                        <span>總支出: <b>$${totalS.toLocaleString()}</b> (此通路: <span class="clickable" onclick="showEdit(${cat.id}, ${card.id}, 'spent')">$${(card.spent||0).toLocaleString()}</span>)</span>
+                        <span class="clickable" onclick="showEdit(${cat.id}, ${card.id}, 'tiers')">${card.tiers.length} 層回饋規則 ⚙️</span>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML += `
+            <div class="category-card">
+                <div class="category-head" onclick="toggleCategory(${cat.id})">
+                    <div class="category-info">
+                        <div class="category-name"><span>${cat.isCollapsed ? '▶' : '▼'}</span> ${cat.name}</div>
+                        <div class="category-badge">本通路累積：$${catTotal.toLocaleString()}</div>
+                    </div>
+                    <button class="btn-add-item" onclick="event.stopPropagation(); showAddCard(${cat.id})">＋加入新卡</button>
+                </div>
+                <div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:40px;text-align:center;color:#b2bec3;font-size:0.95em;">這裡空空的，快點擊上方「加入新卡」</div>'}</div>
+            </div>`;
+        });
+
+        let totalS = 0, totalR = 0, done = {};
+        data.forEach(cat => cat.cards.forEach(card => {
+            totalS += (card.spent || 0);
+            const n = card.name.trim();
+            if (!done[n]) {
+                card.tiers.forEach(t => {
+                    totalR += Math.floor(Math.min(gSpent[n] * (t.rate / 100), t.limit));
+                });
+                done[n] = true;
+            }
+        }));
+        document.getElementById('globalTotalSpent').innerText = '$' + totalS.toLocaleString();
+        document.getElementById('globalTotalReward').innerText = '$' + totalR.toLocaleString();
+    }
+
+    // --- 互動功能 (略，維持與 2026 PRO 同步) ---
     function showAddCat() {
-        modalBox.innerHTML = `<h3>新增消費分類</h3><input type="text" id="catName" class="modal-input" placeholder="例如：外送、交通"><div style="display:flex;gap:10px;margin-top:20px;"><button style="flex:1;padding:12px;border:none;border-radius:10px;background:#eee;" onclick="closeModal()">取消</button><button style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold;" onclick="const n=document.getElementById('catName').value;if(n){data.push({id:Date.now(),name:n,cards:[],isCollapsed:false});save();closeModal();}">確定新增</button></div>`;
+        modalBox.innerHTML = `<h3 style="color:var(--text-dark)">💜 新增消費分類</h3>
+        <input type="text" id="catN" class="input-box" placeholder="輸入通路名稱（如：Uber、交通）">
+        <div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">我再想想</button><button class="btn-confirm" onclick="doAddCat()">確定建立</button></div>`;
         modal.style.display = 'flex';
     }
+    function doAddCat() { const n = document.getElementById('catN').value.trim(); if(n) { data.push({id: Date.now(), name: n, cards: [], isCollapsed: false}); save(); closeModal(); } }
 
-    function showAddCard(catId) {
-        modalBox.innerHTML = `<h3>新增卡片</h3>
-        <input type="text" id="cName" class="modal-input" placeholder="卡片名稱" oninput="autoFill(this.value)">
-        <input type="number" inputmode="decimal" id="cLimit" class="modal-input" placeholder="回饋上限 ($)" value="300">
-        <input type="number" inputmode="decimal" id="cRate" class="modal-input" placeholder="回饋百分比 (%)" value="5">
-        <input type="text" id="cNote" class="modal-input" placeholder="通路備註 (僅限此分類)">
-        <div style="display:flex;gap:10px;margin-top:20px;"><button style="flex:1;padding:12px;border:none;border-radius:10px;background:#eee;" onclick="closeModal()">取消</button><button style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold;" onclick="doAddCard(${catId})">確定新增</button></div>`;
-        modal.style.display = 'flex';
+    function addTierUI(r="", l="") {
+        const div = document.createElement('div'); div.style.marginBottom = "10px";
+        div.innerHTML = `<div style="display:flex;gap:12px;"><input type="number" class="input-box t-r" placeholder="%" style="flex:1" value="${r}"><input type="number" class="input-box t-l" placeholder="上限$" style="flex:2" value="${l}"><button onclick="this.parentElement.parentElement.remove()" style="border:none;background:none;color:var(--danger);font-size:1.4em;">✕</button></div>`;
+        document.getElementById('tCon').appendChild(div);
     }
 
-    function autoFill(name) {
-        for(let cat of data) for(let card of cat.cards) if(card.name.trim() === name.trim()){ document.getElementById('cLimit').value = card.limit; document.getElementById('cRate').value = card.rate; return; }
+    function showAddCard(id) {
+        modalBox.innerHTML = `<h3 style="color:var(--text-dark)">💳 加入信用卡</h3>
+        <input type="text" id="cN" class="input-box" placeholder="卡片名稱" oninput="autoFill(this.value)">
+        <div id="tCon"></div><button onclick="addTierUI()" style="width:100%;padding:12px;margin:10px 0;border:2px dashed var(--primary-light);border-radius:16px;background:none;color:var(--primary);font-weight:700;">＋增加回饋層級</button>
+        <input type="text" id="cNo" class="input-box" placeholder="備註（如：需登錄、Apple Pay）">
+        <div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">取消</button><button class="btn-confirm" onclick="doAddCard(${id})">確認加入</button></div>`;
+        addTierUI("5", "300"); modal.style.display = 'flex';
     }
 
     function doAddCard(catId) {
-        const name = document.getElementById('cName').value.trim();
-        const limit = Number(document.getElementById('cLimit').value), rate = Number(document.getElementById('cRate').value), note = document.getElementById('cNote').value.trim();
-        if(!name) return; data.find(c => c.id === catId).cards.push({ id: Date.now(), name, limit, rate, spent: 0, note }); save(); closeModal();
+        const n = document.getElementById('cN').value.trim();
+        const nt = document.getElementById('cNo').value.trim();
+        const rs = document.querySelectorAll('.t-r'), ls = document.querySelectorAll('.t-l');
+        let ts = []; rs.forEach((r, i) => { if(r.value) ts.push({ rate: Number(r.value), limit: Number(ls[i].value) }); });
+        if(n && ts.length) { data.find(c=>c.id===catId).cards.push({ id: Date.now(), name: n, tiers: ts, spent: 0, note: nt }); save(); closeModal(); }
+    }
+
+    function showRecord(catId, cardId) {
+        const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
+        modalBox.innerHTML = `<h3 style="color:var(--text-dark)">💰 紀錄金額 (${card.name})</h3>
+        <input type="number" inputmode="decimal" id="sAmt" class="input-box" placeholder="輸入本次刷卡金額">
+        <div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">取消</button><button class="btn-confirm" onclick="doRecord(${catId}, ${cardId})">確定紀錄</button></div>`;
+        modal.style.display = 'flex'; setTimeout(() => document.getElementById('sAmt').focus(), 100);
+    }
+    function doRecord(catId, cardId) { const a = Number(document.getElementById('sAmt').value); if(a) { data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId).spent += a; save(); closeModal(); } }
+
+    function showRewardDetail(name) {
+        let ts = 0, tiers = [];
+        data.forEach(cat => cat.cards.forEach(card => { if(card.name.trim()===name.trim()){ ts += (card.spent||0); tiers = card.tiers; } }));
+        let minCap = 9999999; tiers.forEach(t => { if(t.limit<999999){ const c = Math.round(t.limit/(t.rate/100)); if(c<minCap) minCap = c; } });
+        let html = `<h3 style="color:var(--text-dark)">📊 ${name} 試算詳情</h3><div style="margin-bottom:15px;color:var(--primary);font-weight:700;">加總累積消費：$${ts.toLocaleString()}</div>`;
+        tiers.forEach((t, i) => {
+            const r = Math.floor(Math.min(ts * (t.rate/100), t.limit));
+            html += `<div style="padding:15px;background:var(--sub-bg);border-radius:16px;margin-bottom:12px;font-size:0.95em;color:var(--text-dark);">層級 ${i+1} (${t.rate}%)：<b>$${r.toLocaleString()}</b> / ${t.limit>=999999?'無上限':'$'+t.limit.toLocaleString()}</div>`;
+        });
+        html += `<div style="margin-top:15px;padding:15px;background:#fff5f5;border-radius:16px;color:var(--danger);font-weight:800;">距離封頂剩：$${Math.max(0, minCap-ts).toLocaleString()}</div>`;
+        html += `<button class="btn-confirm" style="width:100%;margin-top:20px;" onclick="closeModal()">了解</button>`;
+        modalBox.innerHTML = html; modal.style.display = 'flex';
     }
 
     function showEdit(catId, cardId, field) {
-        const card = data.find(c => c.id === catId).cards.find(cd => cd.id === cardId);
-        const isNum = (field === 'spent' || field === 'limit' || field === 'rate');
-        const fieldMap = { 'name': '名稱', 'spent': '金額', 'limit': '上限', 'rate': '比率', 'note': '備註' };
-        modalBox.innerHTML = `<h3>修改 ${fieldMap[field] || field}</h3><input type="${isNum?'number':'text'}" ${isNum?'inputmode="decimal"':''} id="editVal" class="modal-input" value="${card[field]||''}">
-        <div style="display:flex;gap:10px;margin-top:20px;"><button style="flex:1;padding:12px;border:none;border-radius:10px;background:#eee;" onclick="closeModal()">取消</button><button style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold;" onclick="doEdit(${catId}, ${cardId}, '${field}')">確定修改</button></div>`;
+        const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
+        if (field === 'tiers') {
+            modalBox.innerHTML = `<h3 style="color:var(--text-dark)">⚙️ 修改回饋規則</h3><div id="tCon"></div><button onclick="addTierUI()" style="width:100%;padding:12px;border:2px dashed #ccc;border-radius:16px;background:none;font-weight:700;">＋增加分層</button>
+            <div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">取消</button><button class="btn-confirm" onclick="doSyncTiers(${catId}, ${cardId})">同步修改</button></div>`;
+            card.tiers.forEach(t => addTierUI(t.rate, t.limit));
+        } else {
+            modalBox.innerHTML = `<h3 style="color:var(--text-dark)">✏️ 修改資訊</h3><input type="${field==='spent'?'number':'text'}" id="editV" class="input-box" value="${card[field]||''}">
+            <div class="modal-btns"><button class="btn-cancel" onclick="closeModal()">取消</button><button class="btn-confirm" onclick="doEdit(${catId}, ${cardId}, '${field}')">確定</button></div>`;
+        }
         modal.style.display = 'flex';
     }
 
     function doEdit(catId, cardId, field) {
-        const val = document.getElementById('editVal').value;
-        const targetCat = data.find(c => c.id === catId), targetCard = targetCat.cards.find(cd => cd.id === cardId);
-        const oldName = targetCard.name, finalVal = (field === 'name' || field === 'note') ? val.trim() : Number(val);
-        // 全域同步：名稱、上限、比率
-        if (field === 'limit' || field === 'rate' || field === 'name') { 
-            data.forEach(cat => cat.cards.forEach(card => { if(card.name.trim() === oldName.trim()) card[field] = finalVal; })); 
-        } 
-        // 獨立修改：備註、金額
-        else { targetCard[field] = finalVal; } 
+        const v = document.getElementById('editV').value;
+        const target = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
+        const name = target.name;
+        if (field === 'name') {
+            data.forEach(c => c.cards.forEach(cd => { if(cd.name.trim()===name.trim()) cd.name = v.trim(); }));
+        } else { target[field] = (field==='spent' ? Number(v) : v.trim()); }
         save(); closeModal();
     }
 
-    function showRewardDetail(cardName) {
-        let totalS = 0, limit = 0, rate = 0;
-        data.forEach(cat => cat.cards.forEach(card => { if(card.name.trim() === cardName.trim()){ totalS += card.spent; limit = card.limit; rate = card.rate; } }));
-        const maxS = Math.round(limit / (rate / 100)) || 0, curR = Math.floor(Math.min(totalS * (rate/100), limit)), remR = limit - curR, remS = Math.max(0, maxS - totalS);
-        modalBox.innerHTML = `<h3>${cardName} 回饋進度</h3><div style="line-height:1.8;"><p>累積消費：$${totalS.toLocaleString()}</p><p>目前回饋：$${curR.toLocaleString()}</p><p>剩餘上限：$${remR.toLocaleString()}</p><hr style="border:0;border-top:1px solid #eee;margin:10px 0;"><p>距離封頂還能刷：<b style="color:var(--danger)">$${remS.toLocaleString()}</b></p></div><button style="width:100%;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold;margin-top:15px" onclick="closeModal()">關閉視窗</button>`;
-        modal.style.display = 'flex';
+    function doSyncTiers(catId, cardId) {
+        const target = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
+        const rs = document.querySelectorAll('.t-r'), ls = document.querySelectorAll('.t-l');
+        let ts = []; rs.forEach((r, i) => { if(r.value) ts.push({ rate: Number(r.value), limit: Number(ls[i].value) }); });
+        data.forEach(c => c.cards.forEach(cd => { if(cd.name.trim()===target.name.trim()) cd.tiers = JSON.parse(JSON.stringify(ts)); }));
+        save(); closeModal();
     }
 
-    function render() {
-        const container = document.getElementById('mainDisplay'); container.innerHTML = '';
-        let globalSpent = {}; data.forEach(cat => cat.cards.forEach(card => { const n = card.name.trim(); globalSpent[n] = (globalSpent[n] || 0) + card.spent; }));
-        data.forEach(cat => {
-            let catHtml = "", catSub = 0;
-            cat.cards.forEach(card => {
-                catSub += card.spent; const totS = globalSpent[card.name.trim()], maxS = Math.round(card.limit / (card.rate / 100)) || 1, pct = Math.min((totS / maxS) * 100, 100), remS = Math.max(0, maxS - totS);
-                let col = "bg-green"; if(pct>=100) col="bg-red"; else if(pct>=80) col="bg-orange";
-                catHtml += `<div class="card-item">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div><span style="font-weight:700; color:#4834d4; font-size:1.1em; cursor:pointer;" onclick="showEdit(${cat.id}, ${card.id}, 'name')">${card.name}</span><br><span class="info-tag note-tag" onclick="showEdit(${cat.id}, ${card.id}, 'note')">${card.note || '+ 備註'}</span><span class="info-tag limit-tag">還能刷 $${remS.toLocaleString()}</span></div>
-                        <button class="btn-spend" onclick="showAddSpend(${cat.id}, ${card.id})">＋紀錄</button>
-                    </div>
-                    <div class="progress-container" onclick="showRewardDetail('${card.name}')" title="點擊查看詳細回饋"><div class="progress-bar ${col}" style="width: ${pct}%"></div></div>
-                    <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#636e72;">
-                        <span>共刷: <b>$${totS.toLocaleString()}</b> (此處: <span class="editable" onclick="showEdit(${cat.id}, ${card.id}, 'spent')">$${card.spent.toLocaleString()}</span>)</span>
-                        <span>回饋: <span class="editable" onclick="showEdit(${cat.id}, ${card.id}, 'limit')">$${card.limit}</span> (<span class="editable" onclick="showEdit(${cat.id}, ${card.id}, 'rate')">${card.rate}</span>%)</span>
-                    </div>
-                    <div style="text-align:right;"><button style="background:none;border:none;color:#ccc;font-size:0.8em;padding-top:10px;cursor:pointer;" onclick="if(confirm('確定要刪除這張卡片紀錄嗎？')){data.find(c=>c.id===${cat.id}).cards=data.find(c=>c.id===${cat.id}).cards.filter(cd=>cd.id!==${card.id});save();}">✕ 刪除項目</button></div>
-                </div>`;
-            });
-            container.innerHTML += `<div class="category-group"><div class="category-header" onclick="toggleCategory(${cat.id})"><div><div class="category-title">${cat.isCollapsed?'▶':'▼'} ${cat.name}</div><div class="category-subtitle">通路消費小計: $${catSub.toLocaleString()}</div></div><button style="font-size:0.75em;border:1px solid var(--primary);background:none;color:var(--primary);padding:5px 10px;border-radius:8px;font-weight:bold;cursor:pointer;" onclick="event.stopPropagation(); showAddCard(${cat.id})">＋新增卡片</button></div><div class="card-list ${cat.isCollapsed ? 'collapsed' : ''}">${catHtml || '<div style="padding:20px;text-align:center;color:#ccc;font-size:0.9em;">點擊上方「新增卡片」開始紀錄</div>'}</div></div>`;
-        });
-        let ts = 0, tr = 0, proc = {}; data.forEach(cat => cat.cards.forEach(card => { ts += card.spent; const n = card.name.trim(); if(!proc[n]){ tr += Math.min(globalSpent[n] * (card.rate/100), card.limit); proc[n] = true; } }));
-        document.getElementById('globalTotalSpent').innerText = '$' + ts.toLocaleString(); document.getElementById('globalTotalReward').innerText = '$' + Math.floor(tr).toLocaleString();
+    function exportData() {
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `信用卡助手備份_${new Date().toLocaleDateString()}.json`; a.click();
     }
-
-    function showAddSpend(catId, cardId) {
-        const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
-        modalBox.innerHTML=`<h3>紀錄金額 (${card.name})</h3><input type='number' inputmode='decimal' id='sAmt' class='modal-input' placeholder='請輸入本次消費金額'><div style="display:flex;gap:10px;margin-top:20px;"><button style="flex:1;padding:12px;border:none;border-radius:10px;background:#eee;" onclick="closeModal()">取消</button><button style="flex:1;padding:12px;border:none;border-radius:10px;background:var(--primary);color:#fff;font-weight:bold" onclick="doAddSpend(${catId}, ${cardId})">確定紀錄</button></div>`;
-        modal.style.display='flex';
-        setTimeout(()=>document.getElementById('sAmt').focus(), 100);
+    function importData(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) { try { let imp = JSON.parse(e.target.result); if(Array.isArray(imp)){ data = migrate(imp); save(); alert("已成功讀取雲端備份紀錄！"); } } catch(err) { alert("檔案讀取失敗"); } };
+        reader.readAsText(file);
     }
-    function doAddSpend(catId, cardId) { const a=Number(document.getElementById('sAmt').value); if(a){ data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId).spent+=a; save(); closeModal(); } }
+    function resetAll() { if(confirm("確定要重置歸零嗎？")) { data.forEach(c => c.cards.forEach(cd => cd.spent = 0)); save(); } }
+    function autoFill(name) { for(let cat of data) for(let card of cat.cards) if(card.name.trim() === name.trim()){ const tCon = document.getElementById('tCon'); tCon.innerHTML = ''; card.tiers.forEach(t => addTierUI(t.rate, t.limit)); return; } }
 
-    function exportData() { const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `信用卡助手備份_${new Date().toLocaleDateString()}.json`; a.click(); }
-    function importData(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { data = JSON.parse(e.target.result); save(); } catch(err) { alert("檔案讀取失敗，請確認格式。"); } }; reader.readAsText(file); }
-    function resetAll() { if(confirm("確定要重置所有金額嗎？(分類與卡片設定會保留)")) { data.forEach(c => c.cards.forEach(cd => cd.spent = 0)); save(); } }
     load();
 </script>
 </body>
