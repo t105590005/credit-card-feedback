@@ -37,6 +37,7 @@
 
         .container { max-width: 480px; margin: 0 auto; padding-bottom: 120px; }
 
+        /* SVG 圖示通用設定 */
         .icon-svg {
             width: 1.1em; height: 1.1em;
             display: inline-block; vertical-align: middle;
@@ -45,6 +46,7 @@
             margin-right: 4px; position: relative; top: -1px;
         }
 
+        /* 儀表板 */
         .dashboard {
             background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);
             border-radius: 35px; padding: 25px; color: white;
@@ -53,6 +55,7 @@
         }
         .stat-value { font-size: 1.7em; font-weight: 800; }
 
+        /* 卡片與分類 */
         .category-card {
             background: var(--card-bg); border-radius: 35px; margin-bottom: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(95, 39, 205, 0.05);
@@ -78,23 +81,35 @@
         .card-list.collapsed { display: none; }
         .card-item { padding: 25px; border-top: 1px solid #f8f9ff; }
 
+        /* 標籤佈局 */
         .card-header-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; }
         .card-info-area { flex: 1; min-width: 0; }
         .card-title { font-weight: 800; font-size: 1.25em; color: var(--text-card); margin-bottom: 8px; cursor: pointer; word-break: break-all; }
         
         .label-group { display: flex; flex-direction: row; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-        .pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px; border-radius: 50px; font-size: 0.8em; font-weight: 800; width: fit-content; white-space: nowrap; }
+        .pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 6px 14px; border-radius: 50px; font-size: 0.8em; font-weight: 800;
+            width: fit-content; white-space: nowrap;
+        }
         .pill-note { background: var(--note-bg); color: var(--note-text); border: 1.5px solid #e0d9ff; cursor: pointer; }
         .pill-limit { background: var(--limit-bg); color: var(--limit-text); border: 1.5px solid #c6f6d5; }
 
+        /* 🪙 立體金幣按鈕 (含 SVG) */
         .btn-record { 
-            background: var(--coin-gold); color: var(--coin-border); border: 3px solid var(--coin-border);
-            width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            box-shadow: 4px 4px 0px var(--coin-border); cursor: pointer; transition: 0.1s; flex-shrink: 0; user-select: none;
+            background: var(--coin-gold); color: var(--coin-border); 
+            border: 3px solid var(--coin-border);
+            width: 48px; height: 48px; 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 4px 4px 0px var(--coin-border); 
+            cursor: pointer; transition: 0.1s;
+            flex-shrink: 0; user-select: none;
         }
         .btn-record svg { width: 1.6em; height: 1.6em; stroke-width: 3; margin: 0; top: 0; }
         .btn-record:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px var(--coin-border); }
 
+        /* 進度條 */
         .progress-box { background: #f1f5f9; height: 14px; border-radius: 50px; margin: 15px 0; cursor: pointer; overflow: hidden; }
         .progress-fill { height: 100%; border-radius: 50px; transition: width 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
         .bg-green { background: linear-gradient(90deg, #1dd1a1, #00d2d3); }
@@ -104,9 +119,11 @@
         .card-footer { display: flex; justify-content: space-between; font-size: 0.82em; color: #94a3b8; font-weight: 600; margin-top: 5px; flex-wrap: wrap; gap: 5px; }
         .clickable { color: var(--primary-light); text-decoration: underline; cursor: pointer; }
 
+        /* 底部工具 */
         .admin-tools { display: flex; gap: 12px; margin-top: 30px; }
         .btn-tool { flex: 1; padding: 16px; border-radius: 20px; border: 1.5px solid #e2e8f0; background: white; font-weight: 800; color: #64748b; cursor: pointer; font-size: 0.85em; text-align: center; display: flex; justify-content: center; align-items: center; }
 
+        /* 彈窗系統 */
         #modalOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(52, 31, 151, 0.5); backdrop-filter: blur(5px); z-index: 999; align-items: center; justify-content: center; }
         .modal-body { background: white; width: 90%; max-width: 420px; padding: 30px; border-radius: 30px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); max-height: 90vh; overflow-y: auto; }
         @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -121,12 +138,19 @@
         .guide-accent { color: var(--primary); font-weight: 800; }
         h3 { display: flex; align-items: center; margin-top: 0; }
         
-        /* 明細列表樣式 */
+        /* 明細列表樣式 (記帳版) */
         .history-list { margin-top: 15px; max-height: 250px; overflow-y: auto; padding-right: 5px; }
         .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 10px; border-bottom: 1.5px dashed #f1f5f9; }
-        .history-date { font-size: 0.8em; color: #94a3b8; font-weight: 700; }
-        .history-amount { font-weight: 800; color: var(--text-dark); font-size: 1.1em; }
-        .history-del { background: #ffeaa7; color: #d63031; border: none; border-radius: 10px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 800; }
+        .history-info { display: flex; flex-direction: column; flex: 1; }
+        .history-date { font-size: 0.75em; color: #94a3b8; font-weight: 700; }
+        .history-note { font-size: 0.9em; color: var(--text-dark); font-weight: 700; margin-top: 2px; word-break: break-all;}
+        .history-right { display: flex; align-items: center; gap: 8px; }
+        .history-amount { font-weight: 800; color: var(--primary); font-size: 1.1em; margin-right: 5px;}
+        
+        /* 按鈕樣式 (刪除 & 編輯) */
+        .btn-mini-action { border: none; border-radius: 10px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 800; flex-shrink: 0; }
+        .btn-del { background: #ffeaa7; color: #d63031; }
+        .btn-edit { background: #d1d8e0; color: #4b6584; }
     </style>
 </head>
 <body>
@@ -161,9 +185,10 @@
 <div id="modalOverlay" onclick="if(event.target==this)closeModal()"><div class="modal-body" id="modalBox"></div></div>
 
 <script>
-    const STORAGE_KEY = 'cardTracker_Ledger_v1';
+    const STORAGE_KEY = 'cardTracker_EditRec_v1';
     let data = [];
 
+    // --- SVG 圖示定義 ---
     const ICONS = {
         edit: '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>',
         money: '<svg class="icon-svg" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>',
@@ -182,21 +207,20 @@
         } catch(e) { data = []; render(); }
     }
 
-    // --- 資料結構遷移：加入 records 明細陣列 ---
     function migrate(list) {
         return list.map(cat => ({
             ...cat,
             cards: cat.cards.map(card => {
                 let newCard = { ...card };
                 if (!newCard.tiers) newCard.tiers = [{ rate: newCard.rate || 0, limit: newCard.limit || 0 }];
-                // 若沒有紀錄陣列，則初始化，並將舊有的 spent 金額轉換為一筆「前期累積」紀錄
                 if (!newCard.records) {
                     newCard.records = [];
                     if (newCard.spent > 0) {
                         newCard.records.push({
                             id: Date.now() + Math.random(),
                             amount: newCard.spent,
-                            date: '前期累積紀錄'
+                            date: '前期累積紀錄',
+                            note: '舊系統資料'
                         });
                     }
                 }
@@ -315,28 +339,27 @@
         }
     }
 
-    // --- 新增消費，推入 records 陣列 ---
     function showRecord(catId, cardId) {
         const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
         document.getElementById('modalBox').innerHTML = `
             <h3>${ICONS.money} 紀錄消費 (${card.name})</h3>
             <span class="guide-text">💡 紀錄將同步更新至明細表。</span>
-            <input type="number" inputmode="decimal" id="sAmt" class="input-box" placeholder="請輸入金額">
+            <input type="number" inputmode="decimal" id="sAmt" class="input-box" placeholder="消費金額 (必填)">
+            <input type="text" id="sNote" class="input-box" placeholder="備註 (選填，如: 午餐)">
             <div class="modal-btns">
                 <button class="btn-modal-cancel" onclick="closeModal()">取消</button>
                 <button class="btn-modal-confirm" onclick="
                     const a=Number(document.getElementById('sAmt').value); 
+                    const n=document.getElementById('sNote').value.trim();
                     if(a){
                         const targetCard = data.find(c=>c.id===${catId}).cards.find(cd=>cd.id===${cardId});
                         targetCard.spent += a;
                         
-                        // 取得當前時間格式化
                         const now = new Date();
                         const timeString = (now.getMonth() + 1) + '/' + now.getDate() + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
                         
-                        // 將紀錄推入陣列開頭 (最新在最上面)
                         if(!targetCard.records) targetCard.records = [];
-                        targetCard.records.unshift({ id: Date.now(), amount: a, date: timeString });
+                        targetCard.records.unshift({ id: Date.now(), amount: a, date: timeString, note: n });
                         
                         save(); closeModal();
                     }
@@ -346,7 +369,6 @@
         setTimeout(()=>document.getElementById('sAmt').focus(),100);
     }
 
-    // --- 顯示帳本明細 ---
     function showHistory(catId, cardId) {
         const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
         let listHtml = '';
@@ -357,9 +379,15 @@
             card.records.forEach(r => {
                 listHtml += `
                 <div class="history-item">
-                    <div class="history-date">${r.date}</div>
-                    <div class="history-amount">$${r.amount.toLocaleString()}</div>
-                    <button class="history-del" onclick="deleteRecord(${catId}, ${cardId}, ${r.id})">✕</button>
+                    <div class="history-info">
+                        <div class="history-date">${r.date}</div>
+                        <div class="history-note">${r.note || '無備註'}</div>
+                    </div>
+                    <div class="history-right">
+                        <div class="history-amount">$${r.amount.toLocaleString()}</div>
+                        <button class="btn-mini-action btn-edit" onclick="editRecord(${catId}, ${cardId}, ${r.id})">${ICONS.edit}</button>
+                        <button class="btn-mini-action btn-del" onclick="deleteRecord(${catId}, ${cardId}, ${r.id})">✕</button>
+                    </div>
                 </div>`;
             });
         }
@@ -375,7 +403,49 @@
         document.getElementById('modalOverlay').style.display='flex';
     }
 
-    // --- 刪除單筆紀錄 ---
+    // --- 修改單筆紀錄 ---
+    function editRecord(catId, cardId, recId) {
+        const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
+        const record = card.records.find(r => r.id === recId);
+
+        document.getElementById('modalBox').innerHTML = `
+            <h3>${ICONS.edit} 修改消費明細</h3>
+            <span class="guide-text">💡 修改後總金額將自動校正。</span>
+            <label style="font-size:0.8em;color:#94a3b8;font-weight:700">金額</label>
+            <input type="number" inputmode="decimal" id="editRAmt" class="input-box" value="${record.amount}">
+            <label style="font-size:0.8em;color:#94a3b8;font-weight:700">備註</label>
+            <input type="text" id="editRNote" class="input-box" value="${record.note || ''}">
+            <div class="modal-btns">
+                <button class="btn-modal-cancel" onclick="showHistory(${catId}, ${cardId})">返回</button>
+                <button class="btn-modal-confirm" onclick="doUpdateRecord(${catId}, ${cardId}, ${recId})">儲存修改</button>
+            </div>
+        `;
+    }
+
+    function doUpdateRecord(catId, cardId, recId) {
+        const newAmt = Number(document.getElementById('editRAmt').value);
+        const newNote = document.getElementById('editRNote').value.trim();
+        
+        if (newAmt > 0) {
+            const card = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId);
+            const record = card.records.find(r => r.id === recId);
+            
+            // 計算差額並更新總額
+            const diff = newAmt - record.amount;
+            card.spent += diff;
+            if(card.spent < 0) card.spent = 0;
+
+            // 更新紀錄
+            record.amount = newAmt;
+            record.note = newNote;
+            
+            save();
+            showHistory(catId, cardId); // 返回明細列表
+        } else {
+            alert("金額必須大於 0");
+        }
+    }
+
     function deleteRecord(catId, cardId, recordId) {
         if(!confirm('確定要刪除這筆消費嗎？總金額將重新計算。')) return;
         
@@ -383,13 +453,11 @@
         const recIndex = card.records.findIndex(r => r.id === recordId);
         
         if (recIndex > -1) {
-            // 扣除金額
             card.spent -= card.records[recIndex].amount;
-            if (card.spent < 0) card.spent = 0; // 防呆
-            // 移除陣列項目
+            if (card.spent < 0) card.spent = 0;
             card.records.splice(recIndex, 1);
             save();
-            showHistory(catId, cardId); // 重新渲染明細視窗
+            showHistory(catId, cardId);
         }
     }
 
@@ -415,18 +483,7 @@
     function doEdit(catId, cardId, field) { const v = document.getElementById('editV').value; const target = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId), name = target.name; if (field === 'name') { data.forEach(c => c.cards.forEach(cd => { if(cd.name.trim()===name.trim()) cd.name = v.trim(); })); } else { target[field] = v.trim(); } save(); closeModal(); }
     function doSyncTiers(catId, cardId) { const target = data.find(c=>c.id===catId).cards.find(cd=>cd.id===cardId); const rs = document.querySelectorAll('.t-r'), ls = document.querySelectorAll('.t-l'); let ts = []; rs.forEach((r, i) => { if(r.value) ts.push({ rate: Number(r.value), limit: Number(ls[i].value) }); }); data.forEach(c => c.cards.forEach(cd => { if(cd.name.trim()===target.name.trim()) cd.tiers = JSON.parse(JSON.stringify(ts)); })); save(); closeModal(); }
     function importData(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { try { let imp = JSON.parse(e.target.result); if(Array.isArray(imp)){ data = migrate(imp); save(); alert("匯入成功！"); } } catch(err) { alert("格式錯誤"); } }; reader.readAsText(file); }
-    
-    // 歸零時也必須清空明細陣列
-    function resetAll() { 
-        if(confirm("確定歸零本月所有消費明細與金額？")) { 
-            data.forEach(c => c.cards.forEach(cd => { 
-                cd.spent = 0; 
-                cd.records = []; 
-            })); 
-            save(); 
-        } 
-    }
-    
+    function resetAll() { if(confirm("確定歸零本月所有消費明細與金額？")) { data.forEach(c => c.cards.forEach(cd => { cd.spent = 0; cd.records = []; })); save(); } }
     function autoFill(n) { for(let cat of data) for(let c of cat.cards) if(c.name.trim()===n.trim()){ const tCon=document.getElementById('tCon'); tCon.innerHTML=''; c.tiers.forEach(t=>addTierUI(t.rate,t.limit)); return; } }
 
     load();
